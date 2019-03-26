@@ -13,6 +13,9 @@
 
 ![diagramasa](sa-diagrama-caso-de-uso.png)
 
+### Diagrama de Classe (Mover):
+![diagrama classe mover](diagrama-classe-mover.png)
+
 
 ## Requisitos funcionais:
 RF01 O sistema deve permitir criação e gerência de cadastro de um robô.
