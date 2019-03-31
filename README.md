@@ -4,26 +4,41 @@
 
 
 
+<details><summary>Diagrama de caso de uso do S.S.:</summary>
+<p>
+ 
+ ### Diagrama de caso de uso do S.S.:
+ </p>
+</details>
 
 <details><summary>Diagrama de caso de uso do S.R.:</summary>
 <p>
+ 
  ### Diagrama de caso de uso do S.R.:
-![diagramasr](sr-diagrama-caso-de-uso-2.png)
+ 
+ ![diagramasr](sr-diagrama-caso-de-uso-2.png)
+
 </p>
 </details>
 
 
 <details><summary>Diagrama de caso de uso do S.A.:</summary>
 <p>
+
 ### Diagrama de caso de uso do S.A.:
-![diagramasa](sa-diagrama-caso-de-uso.png)
+
+ ![diagramasa](sa-diagrama-caso-de-uso.png)
+
 </p>
 </details>
 
 <details><summary>Diagrama de clase(Mover):</summary>
 <p>
+
 ### Diagrama de Classe (Mover):
+
 ![diagrama classe mover](diagrama-classe-mover.png)
+
 </p>
 </details>
 
@@ -31,6 +46,7 @@
 
 <details><summary>Casos de uso do S.A.:</summary>
 <p>
+ 
 ### Caso de uso S.A.:
 ##### Nome: Verifica tabuleiro
 * Identificador: CSU.SA 01
@@ -144,19 +160,27 @@ Caso tenha algo, envia o histórico, caso contrário informa que não há histó
 
 <details><summary>Diagrama de caso de uso do S.S.:</summary>
 <p>
+ 
 ### Caso de uso S.S.:
+ 
  </p>
  </details>
  
  
  <details><summary>Diagrama de caso de uso do S.R.:</summary>
 <p>
+ 
 ### Caso de uso S.R.:
- </p>
+
+</p>
  </details>
+
+
+
 
  <details><summary>Requisitos funcionais.:</summary>
 <p>
+ 
 ## Requisitos funcionais:
 RF01 O sistema deve permitir criação e gerência de cadastro de um robô.
 
