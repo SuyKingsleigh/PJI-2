@@ -18,7 +18,7 @@
 
 ## Casos de Uso:
 
-### Caso de uso S.A
+### Caso de uso S.A.:
 ##### Nome: Verifica tabuleiro
 * Identificador: CSU.SA 01
 * Sumário: Inicia a conexão entre S.A S.S
@@ -126,6 +126,10 @@ Caso tenha algo, envia o histórico, caso contrário informa que não há histó
 
 4. Recomeça a partida de onde fora pausada. 
 
+
+### Caso de uso S.S.:
+
+### Caso de uso S.R.:
 
 
 
