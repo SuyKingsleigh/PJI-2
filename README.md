@@ -1,5 +1,5 @@
 # Projeto Integrador 2 
-#### Suyan Moriel e Yara Karoline
+#### Alunos: Suyan Moriel e Yara Karoline
 
 
 
