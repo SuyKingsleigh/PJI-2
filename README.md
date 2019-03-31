@@ -2,22 +2,35 @@
 #### Suyan Moriel e Yara Karoline
 
 
-## Diagramas:
 
-### Diagrama de caso de uso do S.R.:
 
+
+<details><summary>Diagrama de caso de uso do S.R.:</summary>
+<p>
+ ### Diagrama de caso de uso do S.R.:
 ![diagramasr](sr-diagrama-caso-de-uso-2.png)
+</p>
+</details>
 
 
+<details><summary>Diagrama de caso de uso do S.A.:</summary>
+<p>
 ### Diagrama de caso de uso do S.A.:
-
 ![diagramasa](sa-diagrama-caso-de-uso.png)
+</p>
+</details>
 
+<details><summary>Diagrama de clase(Mover):</summary>
+<p>
 ### Diagrama de Classe (Mover):
 ![diagrama classe mover](diagrama-classe-mover.png)
+</p>
+</details>
 
 ## Casos de Uso:
 
+<details><summary>Casos de uso do S.A.:</summary>
+<p>
 ### Caso de uso S.A.:
 ##### Nome: Verifica tabuleiro
 * Identificador: CSU.SA 01
@@ -126,13 +139,24 @@ Caso tenha algo, envia o histórico, caso contrário informa que não há histó
 
 4. Recomeça a partida de onde fora pausada. 
 
+</p>
+</details>
 
+<details><summary>Diagrama de caso de uso do S.S.:</summary>
+<p>
 ### Caso de uso S.S.:
-
+ </p>
+ </details>
+ 
+ 
+ <details><summary>Diagrama de caso de uso do S.R.:</summary>
+<p>
 ### Caso de uso S.R.:
+ </p>
+ </details>
 
-
-
+ <details><summary>Requisitos funcionais.:</summary>
+<p>
 ## Requisitos funcionais:
 RF01 O sistema deve permitir criação e gerência de cadastro de um robô.
 
@@ -163,3 +187,6 @@ RF013 O sistema deve declarar um vencedor assim que todas as caças forem encont
 RF014 O sistema pode ter N competidores *
 
 RF015 O sistema deve projetar informações no tabuleiro (Caças ativas, Caças encontradas, e placar) 
+
+ </p>
+ </details>
