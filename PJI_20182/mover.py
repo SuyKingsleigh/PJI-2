@@ -2,7 +2,7 @@ from ev3dev.ev3 import *
 from time import time, sleep
 from threading import Thread, Lock
 from copy import deepcopy
-from shared import *
+from shared import SharedObj
 
 
 class Cor(object):
