@@ -9,7 +9,7 @@
  
  ### Diagrama de caso de uso do S.S.:
 
-![diagramass](Caso de uso SS.jpeg)
+![diagramass](caso_de_uso_ss.png)
 </p>
 </details>
 
