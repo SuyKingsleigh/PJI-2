@@ -162,11 +162,7 @@ Caso tenha algo, envia o histórico, caso contrário informa que não há histó
 <p>
  
 ### Caso de uso S.S.:
- 
- </p>
- </details>
-
-##### Nome: Start/Stop
+ ##### Nome: Start/Stop
 
 Identificador: CSU SS 01;
 
@@ -310,6 +306,10 @@ Precondições:
  
  <details><summary>Diagrama de caso de uso do S.R.:</summary>
 <p>
+ </p>
+ </details>
+
+
  
 ### Caso de uso S.R.:
 
