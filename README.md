@@ -168,53 +168,29 @@ Caso tenha algo, envia o histórico, caso contrário informa que não há histó
 
 ##### Nome: Start/Stop
 
-Identificador: CSU01;
-
-Sumário: SS recebe as informações de login, envia dados;
+Identificador: CSU SS 01;
 
 Ator primário: S.A.;
 
-Sumário:  SA envia uma mensagem para SS pausar ou reiniciar a movimentação dos robôs ;
+Sumário: S.A. envia uma mensagem para S.S. pausar ou retornar com a movimentação dos robôs ;
 
 Precondições: O jogo deve estar iniciado e rodando
 
-Fluxo principal:
+###### Fluxo principal:
 
- 1  O jogo deve ser iniciado
+* 1.  O jogo deve ser iniciado
 
-	2  S.A. deve enviar um comando para pausar/restartar para S.S.
+* 2.  S.A. deve enviar um comando para pausar/restartar para S.S.
 
- 3 S.S. encaminha o pedido  para o S.R.
+* 3. S.S. encaminha o pedido  para o S.R.
 
- 4 S.R. executa o pedido
-
+* 4. S.R. executa o pedido.
 
 ##### Nome: Recebe informações
 
-Identificador: CSU02;
+Identificador: CSU SS 02;
 
-Sumário: Com cadastro e autenticação previamente concluídas, o SR tem condições de receber os dados do jogo do SS: coordenadas inicial e das caças, modo de operação, etc.;
-
-Ator primário: Sistema Supervisório;
-
-Precondições:
-
-Robô já ter sido cadastrado;
-
-O robô já ter se autenticado;
-
-Fluxo principal:
-
-SS envia os dados para o robô para início do jogo;
-
-SR processa os dados e define sua posição inicial e mapeia as caças do jogo;
-
-
-##### Nome: Envia dados
-
-Identificador: CSU023;
-
-Sumário: Com cadastro e autenticação previamente concluídas, o SR tem condições de enviar os dados do jogo ao SS: posição.
+Sumário: Com a conexão estabelecida, o SR tem condições de receber os dados do jogo do SS: coordenadas inicial e das caças, modo de operação, etc.;
 
 Ator primário: Sistema Supervisório;
 
@@ -224,58 +200,72 @@ Robô já ter sido cadastrado;
 
 O robô já ter se autenticado;
 
-Fluxo principal:
+###### Fluxo principal:
 
-SS envia os dados para início do jogo;
+* 1. SS envia os dados para o robô para início do jogo;
 
-SR processa os dados e define sua posição inicial e mapeia as caças do jogo.
+* 2. SR processa os dados, define sua posição inicial e mapeia as caças do jogo;
+
+
+##### Nome: Comunicação entre SR e SS
+
+Identificador: CSU SS 03;
+
+Sumário: S.R. envia e recebes dados de S.S.
+
+Ator primário: Sistema Supervisório;
+
+###### Fluxo principal:
+
+* S.S envia informações ao S.R, como posição das caças.
+
+* S.R envia informações ao S.S, como sua própria posição. 
+
 
 ##### Nome: Movimenta-se automaticamente
 
-Identificador: CSU04;
+Identificador: CSU SS 04;
 
-Sumário: Uma vez definido como operação automática, o algoritmo de busca das caças, anteriormente declaradas através de coordenadas, é executado, tendo como fonte de informação os sensores do robô - luminosidade (cor) e ultrassônico(distância), além de contar com os motores para deslocamento;
+Sumário: Uma vez definido como operação automática, o algoritmo de busca das caças, anteriormente declaradas através de coordenadas, é executado, tendo como fonte de informação os sensores do robô - luminosidade (cor) e ultrassônico(distância), além de contar com os motores para deslocamento.
 
-Atores primários: Sensores, Motores;
+Atores primários: Sensores, Motores.
 
 Precondições:
 
-Ter recebido os dados com sucesso;
+Ter recebido os dados com sucesso.
 
-Posição inicial correta (0,0 ou 20,20);
+Posição inicial correta (0,0 ou 20,20).
 
-Fluxo principal:
+###### Fluxo principal:
 
-Acionar sensores;
+* 1. Ao se deparar com uma caça, enviar informação ao SS.
 
-Acionar motores;
+* 2. Fluxo de exceção:
 
-Ao se deparar com uma caça, enviar informação ao SS;
+###### Fluxo de exceção: 
 
-Fluxo de exceção:
+* 1. Obstáculo próximo (mudar trajetória).
 
-Obstáculo próximo (mudar trajetória);
+* 2. Se pausar, o robô fica parado esperando o retorno do jogo.
 
-Se pausar, o robô fica parado esperando o retorno do jogo
+* 3. Se terminar o jogo o robô deverá voltar ao ponto inicial.
 
-Se terminar o jogo o robô deverá voltar ao ponto inicial;
-
-Se recebe falha de validação da caça;
+* 4. Se recebe falha de validação da caça.
 
 
 ##### Nome: Movimenta-se manualmente
 
 Identificador: CSU05;
 
-Sumário: O controle do robô e envio das informações de caças não ficam a cargo do SR;
+Sumário: O usuário fica responsável pelo controle do robô e envio das informações de caças.;
 
-Ator primário: Sistema Supervisório, Motores;
+Ator primário:Jogador.
 
 Precondições:
 
 Posição inicial correta (0,0 ou 20,20);
 
-Fluxo principal:
+###### Fluxo principal:
 
 Usuário controla livremente o robô através de uma interface gráfica simplista. 
 
@@ -283,50 +273,40 @@ Usuário controla livremente o robô através de uma interface gráfica simplist
 
 ##### Nome: Obtém caça
 
-Identificador: CSU06;
+Identificador: CSU SS 06;
 
-Sumário: SR informa à SS as caças conquistadas;
+Sumário: S.R. informa à S.S. as caças conquistadas;
 
 Ator primário: Sistema Supervisório, Motores;
 
 
-Precondições:
+Precondições: 
 
-Robô já ter sido cadastrado;
+* Partida ter começado
 
-O robô já ter se autenticado;
+###### Fluxo principal:
 
-Fluxo principal:
+1. S.S. envia os dados ao SA, para atualização de caça conquistada.
 
-SS envia os dados para atualização de caça conquistada;
-
-SS envia os dados para SA
-
-Caso a caça seja validada, o placar é atualizado
-
-Robô parte em busca da próxima
+2. Caso a caça seja validada, o placar é atualizado e o robô parte em busca da próxima.
 
 
 
 ##### Nome: Verifica tabuleiro
 
-Identificador: CSU07;
+Identificador: CSU SS 07;
 
 Sumário: Neste modo a SS envia as informações de caça ao robô
 
-Ator primário: Sistema Supervisório, Motores;;
+Ator primário: Sistema Supervisório
 
-Precondições:
+Precondições: 
 
-Robô já ter sido cadastrado;
+* Partida ter começado. 
 
-O robô já ter se autenticado;
+###### Fluxo principal:
 
-Fluxo principal:
-
-SS envia os dados para atualização de caça conquistada;
-
-SR processa os dados e mapeia novas caças do jogo;
+1. S.S. processa os dados e mapeia novas caças do jogo.
  
  <details><summary>Diagrama de caso de uso do S.R.:</summary>
 <p>
