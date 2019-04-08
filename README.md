@@ -8,8 +8,11 @@
 <p>
  
  ### Diagrama de caso de uso do S.S.:
- </p>
+
+![diagramass](Caso de uso SS.jpeg)
+</p>
 </details>
+
 
 <details><summary>Diagrama de caso de uso do S.R.:</summary>
 <p>
@@ -158,7 +161,7 @@ Caso tenha algo, envia o histórico, caso contrário informa que não há histó
 </p>
 </details>
 
-<details><summary>Diagrama de caso de uso do S.S.:</summary>
+<details><summary>Casos de uso do S.S.:</summary>
 <p>
  
 ### Caso de uso S.S.:
