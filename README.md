@@ -8,8 +8,11 @@
 <p>
  
  ### Diagrama de caso de uso do S.S.:
- </p>
+
+![diagramass](caso_de_uso_ss.png)
+</p>
 </details>
+
 
 <details><summary>Diagrama de caso de uso do S.R.:</summary>
 <p>
@@ -158,17 +161,158 @@ Caso tenha algo, envia o histórico, caso contrário informa que não há histó
 </p>
 </details>
 
-<details><summary>Diagrama de caso de uso do S.S.:</summary>
+<details><summary>Casos de uso do S.S.:</summary>
 <p>
  
 ### Caso de uso S.S.:
- 
- </p>
- </details>
- 
+ ##### Nome: Start/Stop
+
+Identificador: CSU SS 01;
+
+Ator primário: S.A.;
+
+Sumário: S.A. envia uma mensagem para S.S. pausar ou retornar com a movimentação dos robôs ;
+
+Precondições: O jogo deve estar iniciado e rodando
+
+###### Fluxo principal:
+
+* 1.  O jogo deve ser iniciado
+
+* 2.  S.A. deve enviar um comando para pausar/restartar para S.S.
+
+* 3. S.S. encaminha o pedido  para o S.R.
+
+* 4. S.R. executa o pedido.
+
+##### Nome: Recebe informações
+
+Identificador: CSU SS 02;
+
+Sumário: Com a conexão estabelecida, o SR tem condições de receber os dados do jogo do SS: coordenadas inicial e das caças, modo de operação, etc.;
+
+Ator primário: Sistema Supervisório;
+
+Precondições:
+
+Robô já ter sido cadastrado;
+
+O robô já ter se autenticado;
+
+###### Fluxo principal:
+
+* 1. SS envia os dados para o robô para início do jogo;
+
+* 2. SR processa os dados, define sua posição inicial e mapeia as caças do jogo;
+
+
+##### Nome: Comunicação entre SR e SS
+
+Identificador: CSU SS 03;
+
+Sumário: S.R. envia e recebes dados de S.S.
+
+Ator primário: Sistema Supervisório;
+
+###### Fluxo principal:
+
+* S.S envia informações ao S.R, como posição das caças.
+
+* S.R envia informações ao S.S, como sua própria posição. 
+
+
+##### Nome: Movimenta-se automaticamente
+
+Identificador: CSU SS 04;
+
+Sumário: Uma vez definido como operação automática, o algoritmo de busca das caças, anteriormente declaradas através de coordenadas, é executado, tendo como fonte de informação os sensores do robô - luminosidade (cor) e ultrassônico(distância), além de contar com os motores para deslocamento.
+
+Atores primários: Sensores, Motores.
+
+Precondições:
+
+Ter recebido os dados com sucesso.
+
+Posição inicial correta (0,0 ou 20,20).
+
+###### Fluxo principal:
+
+* 1. Ao se deparar com uma caça, enviar informação ao SS.
+
+* 2. Fluxo de exceção:
+
+###### Fluxo de exceção: 
+
+* 1. Obstáculo próximo (mudar trajetória).
+
+* 2. Se pausar, o robô fica parado esperando o retorno do jogo.
+
+* 3. Se terminar o jogo o robô deverá voltar ao ponto inicial.
+
+* 4. Se recebe falha de validação da caça.
+
+
+##### Nome: Movimenta-se manualmente
+
+Identificador: CSU05;
+
+Sumário: O usuário fica responsável pelo controle do robô e envio das informações de caças.;
+
+Ator primário:Jogador.
+
+Precondições:
+
+Posição inicial correta (0,0 ou 20,20);
+
+###### Fluxo principal:
+
+Usuário controla livremente o robô através de uma interface gráfica simplista. 
+
+
+
+##### Nome: Obtém caça
+
+Identificador: CSU SS 06;
+
+Sumário: S.R. informa à S.S. as caças conquistadas;
+
+Ator primário: Sistema Supervisório, Motores;
+
+
+Precondições: 
+
+* Partida ter começado
+
+###### Fluxo principal:
+
+1. S.S. envia os dados ao SA, para atualização de caça conquistada.
+
+2. Caso a caça seja validada, o placar é atualizado e o robô parte em busca da próxima.
+
+
+
+##### Nome: Verifica tabuleiro
+
+Identificador: CSU SS 07;
+
+Sumário: Neste modo a SS envia as informações de caça ao robô
+
+Ator primário: Sistema Supervisório
+
+Precondições: 
+
+* Partida ter começado. 
+
+###### Fluxo principal:
+
+1. S.S. processa os dados e mapeia novas caças do jogo.
  
  <details><summary>Diagrama de caso de uso do S.R.:</summary>
 <p>
+ </p>
+ </details>
+
+
  
 ### Caso de uso S.R.:
 
