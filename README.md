@@ -9,7 +9,7 @@
  
  ### Diagrama de caso de uso do S.S.:
 
-![diagramass](caso_de_uso_ss.png)
+![diagramass](Imagens/caso_de_uso_ss.png)
 </p>
 </details>
 
@@ -19,7 +19,7 @@
  
  ### Diagrama de caso de uso do S.R.:
  
- ![diagramasr](sr-diagrama-caso-de-uso-2.png)
+ ![diagramasr](Imagens/sr-diagrama-caso-de-uso-2.png)
 
 </p>
 </details>
@@ -30,7 +30,7 @@
 
 ### Diagrama de caso de uso do S.A.:
 
- ![diagramasa](sa-diagrama-caso-de-uso.png)
+ ![diagramasa](Imagens/sa-diagrama-caso-de-uso.png)
 
 </p>
 </details>
@@ -40,7 +40,7 @@
 
 ### Diagrama de Classe (Mover):
 
-![diagrama classe mover](diagrama-classe-mover.png)
+![diagrama classe mover](Imagens/diagrama-classe-mover.png)
 
 </p>
 </details>

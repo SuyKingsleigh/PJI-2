@@ -73,3 +73,4 @@ class Commands:
     PORT_SS = 9999
     CONNECT_TO_SS = "sup"
     GET_ROBOT_POS = "robot_pos"
+    UPDATE_MAP = "update_map"

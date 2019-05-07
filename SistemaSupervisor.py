@@ -93,19 +93,29 @@ class ComunicaComSA(Thread):
             self.started = True
             self.supervisor.move(self.pos)
             # envia as bandeiras pro sistema do robo
-            self.supervisor.send_bandeiras()
+            msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.cacas)
+            self.supervisor.send_msg(msg)
 
         elif msg.cmd == Commands.UPDATE_FLAGS:
             # quando alguem obtem uma caca, o SA manda uma mensagem pra geral atualizando as cacas
             self.cacas = msg.data
             print("Nova lista de cacas eh ", self.cacas)
             # envia as bandeiras pro sistema do robo
-            self.supervisor.send_bandeiras()
+            # self.supervisor.send_bandeiras()
+            msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.cacas)
+            self.supervisor.send_msg(msg)
 
         elif msg.cmd == Commands.STOP:
             self.started = False
             self.thread_run_flag = False
             print("FIM DA PARTIDA ")
+
+        elif msg.cmd == Commands.UPDATE_MAP:
+            print("\nUPDATE MAP", msg.data)
+            rep = Message(cmd=Commands.UPDATE_MAP, data=msg.data)
+            self.supervisor.send_msg(rep)
+            # Todo implementar essa trolha
+
         else:
             pass
 
@@ -202,10 +212,9 @@ class Supervisor(Thread):
     def _send_reply(self, address, msg):
         self.router_socket.send_multipart([address, msg])
 
-    def send_bandeiras(self):
-        msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.comunica_com_sa.cacas)
+    def send_msg(self,msg):
+        """Envia uma mensagem ao robo"""
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
-
 
     def _handle(self):
         while self.run_flag:
@@ -235,8 +244,9 @@ class Supervisor(Thread):
 ########################################################################################################################
 
 if __name__ == '__main__':
-    ip = sys.argv[1]
-    name = sys.argv[2]
+    # ip = sys.argv[1]
+    # name = sys.argv[2]
+    ip, name = "localhost", "jamal"
     print(ip, name)
     comsa = ComunicaComSA(ip, Commands.PORT_SA, name)
     supervisor = Supervisor(comsa)

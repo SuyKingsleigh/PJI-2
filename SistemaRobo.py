@@ -25,7 +25,7 @@ class Comunicador(Thread):
 
         self.run_flag = True
         self.cacas = []
-
+        self.posicao_ocupadas = []
 
     def connect(self, player_id):
         # cria um socket temporario, envia a solicitacao pro servidor
@@ -68,6 +68,10 @@ class Comunicador(Thread):
         elif msg.cmd == Commands.UPDATE_FLAGS:
             print("bandeiras a pegar", msg.data)
             self.cacas = msg.data
+        elif msg.cmd == Commands.UPDATE_MAP:
+            print("\nPosicoes ocupadas", msg.data)
+            self.posicao_ocupadas = msg.data
+
         else:
             pass
 
@@ -115,8 +119,10 @@ class Explorador:
 ########################################################################################################################
 
 if __name__ == "__main__":
-    ip = sys.argv[1]
-    name = sys.argv[2]
+    # ip = sys.argv[1]
+    # name = sys.argv[2]
+
+    ip, name = "localhost", "jamal" # para testes somente
 
     c = Comunicador(Commands.PORT_SA, ip)
     c.connect(name)

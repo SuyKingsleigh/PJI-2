@@ -77,6 +77,7 @@ class Jogo:
 
         return self.lista_de_cacas
 
+
     def registra_jogador(self, socket, kwargs):
         """Registra o jogador, caso a ID solicitada JA esteja em uso, retorna falso"""
         id = kwargs['id']
@@ -224,6 +225,7 @@ class Auditor:
             if self.jogo.move_jogador(msg.address, msg.data):
                 info = {'status': 200, 'info': 'OK'}
                 self._send_status(info, msg.address)
+                self._update_map()
 
             else:
                 info = {'status': 400, 'info': 'posicao invalida ou ja ocupada'}
@@ -247,6 +249,10 @@ class Auditor:
             self._router_socket.send_multipart([msg.address, rep.serialize()])
         else:
             pass
+
+    def _update_map(self):
+        rep = Message(cmd=Commands.UPDATE_MAP, data=self.jogo.get_players_pos())
+        self._publish_socket.send(rep.serialize())
 
     def _update_flags(self):
         # atualiza as cacas
