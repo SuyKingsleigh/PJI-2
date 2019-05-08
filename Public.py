@@ -61,10 +61,12 @@ class Commands:
     START = "start"
     GET_FLAG = "get_flag"
     GO_GET_FLAG = "go_get_flag"
-    STOP = "stop_game"
+    STOP = "stop"
     CHECK = "check"
     POS = "pos"
     UPDATE_FLAGS = "update"
+    UPDATE_MAP = "updatemap"
+    INITIAL_POS = "initial"
     QUIT = "q"
     GET_IP = "get_player_ip"
     STATUS = "status"
@@ -73,4 +75,6 @@ class Commands:
     PORT_SS = 9999
     CONNECT_TO_SS = "sup"
     GET_ROBOT_POS = "robot_pos"
-    UPDATE_MAP = "update_map"
+
+    ID = "id"
+    IP = "ip"

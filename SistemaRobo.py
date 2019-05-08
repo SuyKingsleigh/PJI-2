@@ -1,13 +1,13 @@
 import sys
 import time
 from threading import Thread
-
 import zmq
 
 from SistemaSupervisor import Supervisor
 from Public import Message, Commands
 
 HOST = 'localhost'
+
 
 class Comunicador(Thread):
     """Classe responsavel pela comunicacao com o SS
@@ -17,15 +17,16 @@ class Comunicador(Thread):
         CASO CONTRARIO NAO SERA POSSIVEL ESTABELECER UMA COMUNICCACAO
     """
     SLEEP_TIME = 3
+
     def __init__(self, port, SA_ip):
         super().__init__()
         self.port = port
         self.context = zmq.Context()
         self.SA_ip = SA_ip
 
-        self.run_flag = True
         self.cacas = []
-        self.posicao_ocupadas = []
+        self.robo = Robo(self)
+
 
     def connect(self, player_id):
         # cria um socket temporario, envia a solicitacao pro servidor
@@ -48,38 +49,43 @@ class Comunicador(Thread):
         msg = Message(cmd=Commands.CONNECT_TO_SS)
         self.dealer_socket.send(msg.serialize())
 
-
     def _recv(self):
         while True:
             recv = self.dealer_socket.recv()
             recv = Message(0, recv)
             self._process_cmd(recv)
 
-
-    def _process_cmd(self,msg):
+    def _process_cmd(self, msg):
+        print("recebeu a mensagem: ", msg.cmd)
         if msg.cmd == Commands.MOVE_TO:
-            # print(msg.data)
             if msg.get("status") == 200:
                 print("movimento autorizado")
-                self._move(msg.get("data"))
+                self.robo.move(msg.get("data"))
         elif msg.cmd == Commands.STATUS:
-            print(msg.data)
+            print(" status: ", msg.data)
+
+        elif msg.cmd == Commands.START:
+            self.robo.running = True
 
         elif msg.cmd == Commands.UPDATE_FLAGS:
             print("bandeiras a pegar", msg.data)
-            self.cacas = msg.data
-        elif msg.cmd == Commands.UPDATE_MAP:
-            print("\nPosicoes ocupadas", msg.data)
-            self.posicao_ocupadas = msg.data
+            self.robo.set_bandeiras(msg.data)
+            if not self.robo.is_alive():
+                self.robo.start()  # caso a thread nao tenha sido iniciada, inicia-a
+                print("Thread started\n")
+        elif msg.cmd == Commands.STOP:
+            self.robo.join(100)
+            print("STOP")
 
+        elif msg.cmd == Commands.UPDATE_MAP:
+            self.robo.map = msg.data
         else:
             pass
 
     def run(self):
         self._recv()
 
-
-    def _try_move(self, coord):
+    def try_move(self, coord):
         """tenta se mover
          envia a coord para qual vai ir
          se autorizado recebe 200
@@ -87,46 +93,70 @@ class Comunicador(Thread):
          """
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
-        if coord in self.cacas:
+        if coord in self.robo.cacas:
             msg = Message(cmd=Commands.GET_FLAG, data=coord)
             self.dealer_socket.send(msg.serialize())
 
-        self._move(coord)
+        self.robo.move(coord)
 
-    def _move(self, coord):
-        print("Andando para: ", coord)
-        time.sleep(Comunicador.SLEEP_TIME)
-        print("chegou")
-
-
-    def _get_bandeiras(self):
-        """METODO EXCLUSIVO PARA TESTES E TALZ"""
-        for bandeira in self.cacas:
-            print(bandeira)
-            self._try_move(bandeira)
 
 ########################################################################################################################
 class Robo:
     """Classe que istancia um robo, basicamente, serve pra se mover e deu"""
-    pass
 
-########################################################################################################################
-class Explorador:
-    """Responsavel pela inteligencia do sistema explorador"""
-    def calcula_coord(self):
-        pass
+    def __init__(self, comunicador):
+        super().__init__()
+        self.cacas = []
+        self.comunicador = comunicador
+        self.running = False
+        self.daemon = Thread()
+        self.map = []
+
+    def _get_bandeiras(self):
+        for bandeira in self.cacas:
+            if self.running:
+                print(bandeira)
+                self.comunicador.try_move(bandeira)
+            else:
+                break
+
+        if not self.cacas:
+            self.running = False
+            print("Nao ha mais bandeiras")
+
+    def set_bandeiras(self, bandeiras):
+        self.cacas = bandeiras
+
+    def move(self, coord):
+        if not coord in self.map:
+            print("Robo andando para: ", coord)
+            time.sleep(Comunicador.SLEEP_TIME)
+            print("chegou")
+        else: print("posicao ja ocupada")
+
+    def start(self):
+        self.daemon = Thread(target=self._run)
+        self.daemon.daemon = True
+        self.daemon.start()
+
+    def is_alive(self):
+        return self.daemon.is_alive()
+
+    def join(self, timeout):
+        self.running = False
+        self.daemon.join(timeout=timeout)
+
+    def _run(self):
+        if not self.running: self.running = True
+        self._get_bandeiras()
+
 
 ########################################################################################################################
 
 if __name__ == "__main__":
-    # ip = sys.argv[1]
-    # name = sys.argv[2]
-
-    ip, name = "localhost", "jamal" # para testes somente
+    ip = sys.argv[1]
+    name = sys.argv[2]
 
     c = Comunicador(Commands.PORT_SA, ip)
     c.connect(name)
     c.start()
-
-    while(not c.cacas): pass
-    c._get_bandeiras()

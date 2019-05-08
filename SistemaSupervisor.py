@@ -1,3 +1,5 @@
+import os
+import signal
 import socket, sys
 
 import zmq
@@ -31,6 +33,8 @@ class ComunicaComSA(Thread):
 
     def __init__(self, ip, port, id=''):
         super().__init__()
+        self.daemon = True
+
         self.port = port
         self.servers_ip = ip
         self.my_ip = self._get_my_ip()
@@ -79,8 +83,10 @@ class ComunicaComSA(Thread):
             self._process_broadcast_messages(rep)
 
     def _process_broadcast_messages(self, msg):
+        print("Comando: ", msg.cmd)
         # Processa Mensagens vinads do socket subscribe
         if msg.cmd == Commands.START:
+            self.supervisor.start_robot()
             # recebe a posicao inicial das cacas
             self.cacas = msg.data
             print("Lista de cacas: ", self.cacas)
@@ -90,32 +96,32 @@ class ComunicaComSA(Thread):
             pos = Message(0, pos)
             self.pos = pos.data
             print("Posicao inicial: ", self.pos)
-            self.started = True
+            # self.started = True
+            # self.thread_run_flag = True
             self.supervisor.move(self.pos)
             # envia as bandeiras pro sistema do robo
-            msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.cacas)
-            self.supervisor.send_msg(msg)
+            self.supervisor.send_bandeiras()
+
+        elif msg.cmd == Commands.UPDATE_MAP:
+            # print("updated map is", msg.data)
+            self.supervisor.send_updated_map(msg.data)
+
+        elif msg.cmd == Commands.QUIT:
+            # ja que o exit n ta funcionando, vai na forca bruta
+            os.kill(os.getpid(), signal.SIGKILL)
 
         elif msg.cmd == Commands.UPDATE_FLAGS:
             # quando alguem obtem uma caca, o SA manda uma mensagem pra geral atualizando as cacas
             self.cacas = msg.data
             print("Nova lista de cacas eh ", self.cacas)
             # envia as bandeiras pro sistema do robo
-            # self.supervisor.send_bandeiras()
-            msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.cacas)
-            self.supervisor.send_msg(msg)
+            self.supervisor.send_bandeiras()
 
         elif msg.cmd == Commands.STOP:
-            self.started = False
-            self.thread_run_flag = False
+            # self.started = False
+            # self.thread_run_flag = False
+            self.supervisor.stop()
             print("FIM DA PARTIDA ")
-
-        elif msg.cmd == Commands.UPDATE_MAP:
-            print("\nUPDATE MAP", msg.data)
-            rep = Message(cmd=Commands.UPDATE_MAP, data=msg.data)
-            self.supervisor.send_msg(rep)
-            # Todo implementar essa trolha
-
         else:
             pass
 
@@ -132,9 +138,10 @@ class ComunicaComSA(Thread):
     def login(self):
         '''Metodo  para o Login no jogo, envia a ID do robo'''
         dados = {
-            'id': self.id,
-            'ip': self.my_ip
-        }
+            Commands.ID: self.id,
+            Commands.IP: self.my_ip,
+            Commands.INITIAL_POS : self.supervisor.current_pos
+        }  # Commands.ID = string 'id', Commands.IP = 'ip', Commands.INITIAL_POS = 'initial_pos'
         req = Message(cmd=Commands.LOGIN, data=dados)
         self.dealer_socket.send(req.serialize())
         self._read_rep()
@@ -164,8 +171,9 @@ class Supervisor(Thread):
 
     """Interface que faz a comunicacao entre o SR e o proprio sistema, camada mais abaixo do SS"""
 
-    def __init__(self, comunica_com_sa):
+    def __init__(self, comunica_com_sa, initial_pos):
         super().__init__()
+        # self.daemon = True
 
         # cria interface para comunicacao com o sistema AUDITOR
         self.comunica_com_sa = comunica_com_sa
@@ -180,6 +188,12 @@ class Supervisor(Thread):
         self.poller.register(self.router_socket, zmq.POLLIN)  # notifica cada mensagem recebida
 
         self.run_flag = True
+        self.current_pos = initial_pos
+
+
+    def send_updated_map(self, map):
+        msg = Message(cmd=Commands.UPDATE_MAP, data=map)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
 
     def _process_cmd(self, msg):
         address = msg.address
@@ -212,8 +226,8 @@ class Supervisor(Thread):
     def _send_reply(self, address, msg):
         self.router_socket.send_multipart([address, msg])
 
-    def send_msg(self,msg):
-        """Envia uma mensagem ao robo"""
+    def send_bandeiras(self):
+        msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.comunica_com_sa.cacas)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
 
     def _handle(self):
@@ -223,6 +237,14 @@ class Supervisor(Thread):
                 address, req = self.router_socket.recv_multipart()
                 msg = Message(address, req)
                 self._process_cmd(msg)
+
+    def start_robot(self):
+        msg = Message(cmd=Commands.START)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+
+    def stop(self):
+        msg = Message(cmd=Commands.STOP)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
 
     def move(self, coord):
         """Envia ao robo a ordem para se mover para coord"""
@@ -244,13 +266,12 @@ class Supervisor(Thread):
 ########################################################################################################################
 
 if __name__ == '__main__':
-    # ip = sys.argv[1]
-    # name = sys.argv[2]
-    ip, name = "localhost", "jamal"
-    print(ip, name)
+    ip = sys.argv[1]
+    name = sys.argv[2]
+    initial_pos = (0,0)
+
     comsa = ComunicaComSA(ip, Commands.PORT_SA, name)
-    supervisor = Supervisor(comsa)
+    supervisor = Supervisor(comsa, initial_pos)
+
     supervisor.start()
     comsa.set_supervisor(supervisor)
-
-
