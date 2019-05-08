@@ -147,16 +147,16 @@ class ComunicaComSA(Thread):
         self._read_rep()
 
     def try_move(self, coord):
-        """Tenta se mover"""
+        """informa ao supervisor que ta indo pra coord"""
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
-        if self._read_rep() == 200:
-            self.pos = coord
-            print("Ma current pos is: ", self.pos)
-            return True
-
-        print("Ma current pos is: ", self.pos)
-        return False
+        # if self._read_rep() == 200:
+        #     self.pos = coord
+        #     print("Ma current pos is: ", self.pos)
+        #     return True
+        #
+        # print("Ma current pos is: ", self.pos)
+        # return False
 
     def get_flag(self, coord):
         """ Envia mensagem que obteve uma bandeira """
@@ -203,18 +203,20 @@ class Supervisor(Thread):
 
         # robo informa ao supervisor que quer ir para X,Y posicao
         elif msg.cmd == Commands.MOVE_TO:
-            if self.comunica_com_sa.try_move(msg.data):
-                msg = Message(cmd=Commands.STATUS, data=200)
-                self._send_reply(address, msg.serialize())
-            else:
-                msg = Message(cmd=Commands.STATUS, data=400)
-                self._send_reply(address, msg.serialize())
+            self.current_pos = msg.data
+            self.comunica_com_sa.try_move(msg.data)
+            # if self.comunica_com_sa.try_move(msg.data):
+            #     msg = Message(cmd=Commands.STATUS, data=200)
+            #     self._send_reply(address, msg.serialize())
+            # else:
+            #     msg = Message(cmd=Commands.STATUS, data=400)
+            #     self._send_reply(address, msg.serialize())
 
         # robo estabelece conexao com o seu respectivo supervisor
         elif msg.cmd == Commands.CONNECT_TO_SS:
             print("Robo Conectado")
             self.robot_address = address
-            msg = Message(cmd=Commands.STATUS, data=200)
+            msg = Message(cmd=Commands.INITIAL_POS, data=self.current_pos)
             self._send_reply(address, msg.serialize())
 
         elif msg.cmd == Commands.GET_FLAG:
@@ -253,9 +255,9 @@ class Supervisor(Thread):
             "data": coord
         }
         msg = Message(cmd=Commands.MOVE_TO, data=info)
-        # TODO CORRIGIR ESSA PARTE
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
-        print("as coord sao", coord)
+        self.current_pos = coord
+        print("as coord sao",self.current_pos)
 
     def run(self):
         self.comunica_com_sa.start()

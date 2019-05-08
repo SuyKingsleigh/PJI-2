@@ -77,6 +77,10 @@ class Comunicador(Thread):
             self.robo.join(100)
             print("STOP")
 
+        elif msg.cmd == Commands.INITIAL_POS:
+            self.robo.current_pos = msg.data
+            print("current pos is ", self.robo.current_pos)
+
         elif msg.cmd == Commands.UPDATE_MAP:
             self.robo.map = msg.data
         else:
@@ -97,6 +101,7 @@ class Comunicador(Thread):
             msg = Message(cmd=Commands.GET_FLAG, data=coord)
             self.dealer_socket.send(msg.serialize())
 
+        self.robo.current_pos = coord
         self.robo.move(coord)
 
 
@@ -111,6 +116,7 @@ class Robo:
         self.running = False
         self.daemon = Thread()
         self.map = []
+        self.current_pos = None
 
     def _get_bandeiras(self):
         for bandeira in self.cacas:
@@ -126,6 +132,26 @@ class Robo:
 
     def set_bandeiras(self, bandeiras):
         self.cacas = bandeiras
+
+    def _frente(self):
+        # anda pra frente e incrementa 1 em X
+        x,y = self.current_pos[0] + 1, self.current_pos[1]
+        return x,y
+
+    def _tras(self):
+        # anda pra tras e decrementa 1 em X
+        x, y = self.current_pos[0] - 1, self.current_pos[1]
+        return x, y
+
+    def _direita(self):
+        # anda pra direita e incrementa 1 em Y
+        x, y = self.current_pos[0], self.current_pos[1] + 1
+        return x, y
+
+    def _esquerda(self):
+        # anda pra esquerda e decrementa 1 em Y
+        x, y = self.current_pos[0], self.current_pos[1] - 1
+        return x, y
 
     def move(self, coord):
         if not coord in self.map:

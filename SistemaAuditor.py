@@ -227,8 +227,8 @@ class Auditor:
         # autoriza ou nao o movimento de um jogador
         elif msg.cmd == Commands.MOVE_TO:
             if self.jogo.move_jogador(msg.address, msg.data):
-                info = {'status': 200, 'info': 'OK'}
-                self._send_status(info, msg.address)
+                # info = {'status': 200, 'info': 'OK'}
+                # self._send_status(info, msg.address)
                 self._update_map()
             else:
                 info = {'status': 400, 'info': 'posicao invalida ou ja ocupada'}
