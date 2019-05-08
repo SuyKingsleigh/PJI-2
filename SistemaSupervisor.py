@@ -164,6 +164,7 @@ class ComunicaComSA(Thread):
         self.dealer_socket.send(req.serialize())
 
 
+
 ########################################################################################################################
 
 class Supervisor(Thread):
@@ -189,6 +190,7 @@ class Supervisor(Thread):
 
         self.run_flag = True
         self.current_pos = initial_pos
+        self.robot_address = None
 
 
     def send_updated_map(self, map):
@@ -265,6 +267,52 @@ class Supervisor(Thread):
         self._handle()
 
 
+    def manda_frente(self):
+        pass
+
+    def manda_tras(self):
+        pass
+
+    def manda_direita(self):
+        pass
+
+    def manda_esquerda(self):
+        pass
+
+    def set_mode(self, mode):
+        msg = Message(cmd=Commands.MODE, data=mode)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+
+########################################################################################################################
+class InterfaceDeJogo(Thread):
+    def __init__(self):
+        super().__init__()
+        self.supervisor = None
+        self.manual = False # se for setado como true, inicia a thread
+
+    def set_auto(self):
+        self.manual = False
+
+    def set_manual(self):
+        self.manual = True
+
+    def _manual_input(self):
+        user_input = ' '
+        while self.manual:
+            user_input = input(">>>  ")
+            if user_input == "w": self.supervisor.manda_frente()
+            elif user_input == "d": self.supervisor.manda_direita()
+            elif user_input == "a": self.supervisor.manda_esquerda()
+            elif user_input == "s": self.supervisor.manda_tras()
+            elif user_input == "q" : pass
+            else: pass
+
+    def run(self):
+        if self.manual: self._manual_input()
+        else:
+            pass
+        self.supervisor.set_mode(self.manual)
+
 ########################################################################################################################
 
 if __name__ == '__main__':
@@ -274,6 +322,14 @@ if __name__ == '__main__':
 
     comsa = ComunicaComSA(ip, Commands.PORT_SA, name)
     supervisor = Supervisor(comsa, initial_pos)
+    jogo = InterfaceDeJogo()
 
     supervisor.start()
     comsa.set_supervisor(supervisor)
+    jogo.supervisor = supervisor
+
+    while not supervisor.robot_address: pass
+
+    jogo.set_auto()
+    jogo.start()
+

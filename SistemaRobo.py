@@ -83,6 +83,12 @@ class Comunicador(Thread):
 
         elif msg.cmd == Commands.UPDATE_MAP:
             self.robo.map = msg.data
+
+        elif msg.cmd == Commands.MODE:
+            if msg.data == False:
+                print("MODO AUTOMATICO")
+            else: print("MODO MANUAL ")
+            self.robo.manual = Commands.MODE
         else:
             pass
 
@@ -117,6 +123,7 @@ class Robo:
         self.daemon = Thread()
         self.map = []
         self.current_pos = None
+        self.manual = False
 
     def _get_bandeiras(self):
         for bandeira in self.cacas:
@@ -175,6 +182,8 @@ class Robo:
     def _run(self):
         if not self.running: self.running = True
         self._get_bandeiras()
+
+
 
 
 ########################################################################################################################

@@ -78,3 +78,5 @@ class Commands:
 
     ID = "id"
     IP = "ip"
+
+    MODE = "mode"
