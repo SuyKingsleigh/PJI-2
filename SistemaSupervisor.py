@@ -39,26 +39,26 @@ class ComunicaComSA(Thread):
         self.servers_ip = ip
         self.my_ip = self._get_my_ip()
         self.id = id
-        self.thread_run_flag = True  # flag que permite a execucao da thread
+        self._thread_run_flag = True  # flag que permite a execucao da thread
 
         # criacao dos sockets, dealer_socket manda mensagens para o servidor
         # sub_socket recebe mensagens do servidor (mensagens as quais sao enviadas para todos os clientes)
         self.context = zmq.Context()
         self.dealer_socket = self.context.socket(zmq.DEALER)
-        self.sub_socket = self.context.socket(zmq.SUB)
+        self._sub_socket = self.context.socket(zmq.SUB)
 
         # inscreve para todos os topicos
-        self.sub_socket.setsockopt(zmq.SUBSCRIBE, b"")
-        self.sub_socket.setsockopt(zmq.LINGER, 0)
+        self._sub_socket.setsockopt(zmq.SUBSCRIBE, b"")
+        self._sub_socket.setsockopt(zmq.LINGER, 0)
 
         # conecta os sockets
-        self.sub_socket.connect("tcp://%s:%d" % (self.servers_ip, port))
+        self._sub_socket.connect("tcp://%s:%d" % (self.servers_ip, port))
         self.dealer_socket.connect("tcp://%s:%d" % (self.servers_ip, self.port + 1))
 
         # dados da partida
         self.cacas = []
         self.started = False  # flag para indicar se o jogo comecou ou nao
-        self.pos = (0, 0)
+        self.pos = (0, 0) # posicao
 
         # em alguns casos eh necessario ter acesso a camada inferior (supervisor)
         self.supervisor = None
@@ -77,8 +77,8 @@ class ComunicaComSA(Thread):
         return self.my_ip
 
     def _recv(self):
-        while self.thread_run_flag:
-            ans = self.sub_socket.recv()
+        while self._thread_run_flag:
+            ans = self._sub_socket.recv()
             rep = Message(0, ans)
             self._process_broadcast_messages(rep)
 
@@ -92,9 +92,9 @@ class ComunicaComSA(Thread):
             print("Lista de cacas: ", self.cacas)
 
             # recebe a posicao inicial
-            pos = self.dealer_socket.recv()
-            pos = Message(0, pos)
-            self.pos = pos.data
+            # pos = self.dealer_socket.recv()
+            # pos = Message(0, pos)
+            # self.pos = pos.data
             print("Posicao inicial: ", self.pos)
             # self.started = True
             # self.thread_run_flag = True

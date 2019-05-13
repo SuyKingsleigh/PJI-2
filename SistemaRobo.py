@@ -1,3 +1,4 @@
+import random
 import sys
 import time
 from threading import Thread
@@ -160,10 +161,11 @@ class Robo:
         x, y = self.current_pos[0], self.current_pos[1] - 1
         return x, y
 
+
     def move(self, coord):
         if not coord in self.map:
             print("Robo andando para: ", coord)
-            time.sleep(Comunicador.SLEEP_TIME)
+            time.sleep(random.randint(1,10))
             print("chegou")
         else: print("posicao ja ocupada")
 

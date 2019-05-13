@@ -340,15 +340,6 @@ class InterfaceAuditora:
         self.auditor = Auditor(port)
         self.auditor.run()
 
-    def _read_commands(self, command):
-        if command == Commands.START:
-            self.auditor.inicia_partida()
-        elif command == Commands.STOP:
-            pass
-        # Todo criar metodo de parada em auditor
-        else:
-            print("O comando ", command, " eh invalido")
-
     def run(self):
         """le a entrada padrao
         start = inicia partida
