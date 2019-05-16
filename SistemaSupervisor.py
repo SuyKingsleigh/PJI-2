@@ -1,10 +1,13 @@
 import os
 import signal
 import socket, sys
+import time
 
 import zmq
 from threading import Thread
 from Public import Message, Commands
+
+from mover import Mover
 
 import mover
 
@@ -64,6 +67,7 @@ class ComunicaComSA(Thread):
 
         # em alguns casos eh necessario ter acesso a camada inferior (supervisor)
         self.supervisor = None
+        self.name = "comunicacomsa"
 
     def set_supervisor(self, supervisor):
         self.supervisor = supervisor
@@ -89,7 +93,6 @@ class ComunicaComSA(Thread):
         print("Comando: ", msg.cmd)
         # Processa Mensagens vinads do socket subscribe
         if msg.cmd == Commands.START:
-            self.supervisor.start_robot()
             # recebe a posicao inicial das cacas
             self.cacas = msg.data
             print("Lista de cacas: ", self.cacas)
@@ -99,11 +102,10 @@ class ComunicaComSA(Thread):
             # pos = Message(0, pos)
             # self.pos = pos.data
             print("Posicao inicial: ", self.pos)
-            # self.started = True
-            # self.thread_run_flag = True
             self.supervisor.move(self.pos)
             # envia as bandeiras pro sistema do robo
             self.supervisor.send_bandeiras()
+            self.supervisor.start_robot()
 
         elif msg.cmd == Commands.UPDATE_MAP:
             # print("updated map is", msg.data)
@@ -122,6 +124,12 @@ class ComunicaComSA(Thread):
 
         elif msg.cmd == Commands.MODE:
             self.supervisor.mode = msg.data
+            self.supervisor.set_mode(self.supervisor.mode)
+            if self.supervisor.mode:
+                print("modo manual")
+                self.supervisor.jogo.manual = msg.data
+                self.supervisor.jogo.start()
+            else: print("modo automatico")
 
         elif msg.cmd == Commands.STOP:
             # self.started = False
@@ -199,6 +207,8 @@ class Supervisor(Thread):
         self.current_pos = initial_pos
         self.robot_address = None
 
+        self.jogo = InterfaceDeJogo(self)
+        self.name = "supervisor"
 
     def send_updated_map(self, map):
         msg = Message(cmd=Commands.UPDATE_MAP, data=map)
@@ -252,6 +262,7 @@ class Supervisor(Thread):
     def start_robot(self):
         msg = Message(cmd=Commands.START)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        self.manda_frente()
 
     def stop(self):
         msg = Message(cmd=Commands.STOP)
@@ -275,20 +286,25 @@ class Supervisor(Thread):
 
 
     def manda_frente(self):
-        msg = Message(cmd=Commands.DIRECTION, data=mover.Frente)
-        self.router_socket.send([self.robot_address, msg.serialize()])
+        msg = Message(cmd=Commands.DIRECTION, data=Mover.FRENTE)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        print("frente")
+
 
     def manda_tras(self):
-        msg = Message(cmd=Commands.DIRECTION, data=mover.TRAS)
-        self.router_socket.send([self.robot_address, msg.serialize()])
+        msg = Message(cmd=Commands.DIRECTION, data=Mover.TRAS)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        print("tras")
 
     def manda_direita(self):
-        msg = Message(cmd=Commands.DIRECTION, data=mover.DIREITA)
-        self.router_socket.send([self.robot_address, msg.serialize()])
+        msg = Message(cmd=Commands.DIRECTION, data=Mover.DIREITA)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        print("direita")
 
     def manda_esquerda(self):
-        msg = Message(cmd=Commands.DIRECTION, data=mover.ESQUERDA)
-        self.router_socket.send([self.robot_address, msg.serialize()])
+        msg = Message(cmd=Commands.DIRECTION, data=Mover.ESQUERDA)
+        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        print("esquerda")
 
     def set_mode(self, mode):
         msg = Message(cmd=Commands.MODE, data=mode)
@@ -300,6 +316,7 @@ class InterfaceDeJogo(Thread):
         super().__init__()
         self.supervisor = supervisor
         self.manual = self.supervisor.mode
+        self.name = "interfacedejogo"
 
     def set_auto(self):
         self.manual = False
@@ -320,10 +337,6 @@ class InterfaceDeJogo(Thread):
     def run(self):
         print("\n\nInterface de jogo\n\n")
         while self.manual: self._manual_input()
-        else:
-            pass
-        # self.supervisor._set_mode(self.manual)
-
 ########################################################################################################################
 
 if __name__ == '__main__':
@@ -334,13 +347,12 @@ if __name__ == '__main__':
     comsa = ComunicaComSA(ip, Commands.PORT_SA, name)
     supervisor = Supervisor(comsa, initial_pos)
 
-    jogo = InterfaceDeJogo(supervisor)
+    # jogo = InterfaceDeJogo(supervisor)
     comsa.set_supervisor(supervisor)
     supervisor.start()
-    # jogo.supervisor = supervisor
 
     while not supervisor.robot_address: pass
 
     # jogo.set_auto()
-    jogo.start()
+    # jogo.start()
 

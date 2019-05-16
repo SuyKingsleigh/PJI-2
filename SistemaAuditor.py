@@ -1,8 +1,9 @@
 import socket
 import sys
+from datetime import time
 from threading import Thread
 from Public import Message, Commands
-
+import time
 import zmq, random
 
 
@@ -278,10 +279,10 @@ class Auditor:
            Sorteia posicao inicial de cada um, envia a posicao individualmente
            cmd=start
            """
+        # self.set_mode(Commands.MANUAL)
         self._sorteia_cacas()
         self._sorteia_posicao_inicial()
         self.jogo_started = True  # seta a flag de started pra true
-        self.set_mode(Commands.MANUAL)
 
     def set_mode(self, mode):
         """Manual = TRUE
@@ -289,6 +290,7 @@ class Auditor:
         self.jogo.manual = mode
         msg = Message(cmd=Commands.MODE, data=mode)
         self._publish_socket.send(msg.serialize())
+        if mode: print("modo manual")
 
 
     def _sorteia_cacas(self):
@@ -339,7 +341,7 @@ class Auditor:
 
     def run(self):
         """Inicia a thread para lidar com requisicoes dos supervisores """
-        self.daemon = Thread(target=self._handle)
+        self.daemon = Thread(target=self._handle, name="auditor run")
         self.daemon.daemon = True
         self.daemon.start()
 
@@ -354,6 +356,7 @@ class InterfaceAuditora:
     def __init__(self, port):
         self.auditor = Auditor(port)
         self.auditor.run()
+
 
     def run(self):
         """le a entrada padrao
@@ -373,7 +376,10 @@ class InterfaceAuditora:
                 sys.exit()
             elif user_input == Commands.STOP:
                 self.auditor.stop_game()
-
+            elif user_input == "manual":
+                self.auditor.set_mode(Commands.MANUAL)
+            elif user_input == "automatico":
+                self.auditor.set_mode(Commands.AUTOMATICO)
             else:
                 pass
         print("Fim")

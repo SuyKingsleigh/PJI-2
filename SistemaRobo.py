@@ -7,7 +7,9 @@ import zmq
 from SistemaSupervisor import Supervisor
 from Public import Message, Commands
 
-import mover
+
+from mover import Mover
+
 
 HOST = 'localhost'
 
@@ -78,7 +80,6 @@ class Comunicador(Thread):
             self.robo.set_bandeiras(msg.data)
             if not self.robo.is_alive():
                 self.robo.start()  # caso a thread nao tenha sido iniciada, inicia-a
-                print("Thread started\n")
         elif msg.cmd == Commands.STOP:
             self.robo.join(100)
             print("STOP")
@@ -90,7 +91,7 @@ class Comunicador(Thread):
         elif msg.cmd == Commands.UPDATE_MAP:
             self.robo.map = msg.data
 
-        elif msg.cmd == Commands.MANUAL:
+        elif msg.cmd == Commands.DIRECTION:
             self._process_move(msg.data)
 
         elif msg.cmd == Commands.MODE:
@@ -105,14 +106,18 @@ class Comunicador(Thread):
         self._recv()
 
     def _process_move(self, data):
-        if data == mover.FRENTE:
+        if data == Mover.FRENTE:
             self.robo.frente()
-        elif data == mover.TRAS:
+            print("indo pra frente")
+        elif data == Mover.TRAS:
             self.robo.tras()
-        elif data == mover.DIREITA:
+            print("indo para tras")
+        elif data == Mover.DIREITA:
             self.robo.direita()
-        elif data == mover.ESQUERDA:
+            print("indo para direita")
+        elif data == Mover.ESQUERDA:
             self.robo.esquerda()
+            print("indo para a esquerda")
         else: pass
 
 
@@ -203,7 +208,7 @@ class Robo:
 
     def _run(self):
         if not self.running: self.running = True
-        self._get_bandeiras()
+        if not self.manual: self._get_bandeiras()
 
 
 
