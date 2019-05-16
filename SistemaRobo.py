@@ -11,7 +11,7 @@ HOST = 'localhost'
 
 
 class Comunicador(Thread):
-    """Classe responsavel pela comunicacao com o SS
+    """ Classe responsavel pela comunicacao com o SS
         Inicialmente envia uma mensagem para o SA, apenas perguntando o IP do SS
         Descobre o IP a partir do NOME do SS.
         EH DE SUMA IMPORTANCIA QUE O NOME CADASTRADO NO SS E NO SR SEJAM OS MESMOS
@@ -39,12 +39,15 @@ class Comunicador(Thread):
         # recebe a resposta do servidor
         rep = socket.recv()
         rep = Message(0, rep)
-        self.SS_ip = rep.data
+        # self.SS_ip = rep.data
+        self.connect_to_supervisor(rep.data)
         print(rep.data)
 
+
+    def connect_to_supervisor(self, ip):
         # conecta ao respectivo S.S
         self.dealer_socket = self.context.socket(zmq.DEALER)
-        self.dealer_socket.connect("tcp://%s:%d" % (self.SS_ip, Supervisor.SUPERVISOR_PORT))
+        self.dealer_socket.connect("tcp://%s:%d" % (ip, Supervisor.SUPERVISOR_PORT))
 
         # envia uma mensagem pro ss (so pra testar msm)
         msg = Message(cmd=Commands.CONNECT_TO_SS)
@@ -191,9 +194,17 @@ class Robo:
 ########################################################################################################################
 
 if __name__ == "__main__":
-    ip = sys.argv[1]
-    name = sys.argv[2]
 
-    c = Comunicador(Commands.PORT_SA, ip)
-    c.connect(name)
-    c.start()
+    if len(sys.argv) == 4:
+        print("flag is", sys.argv[1])
+        ip = sys.argv[2]
+        name = sys.argv[3]
+        c = Comunicador(Commands.PORT_SA, ip)
+        c.connect_to_supervisor(ip)
+        c.start()
+    else:
+        ip = sys.argv[1]
+        name = sys.argv[2]
+        c = Comunicador(Commands.PORT_SA, ip)
+        c.connect(name)
+        c.start()
