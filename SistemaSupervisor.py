@@ -118,6 +118,9 @@ class ComunicaComSA(Thread):
             # envia as bandeiras pro sistema do robo
             self.supervisor.send_bandeiras()
 
+        elif msg.cmd == Commands.MODE:
+            self.supervisor.mode = msg.data
+
         elif msg.cmd == Commands.STOP:
             # self.started = False
             # self.thread_run_flag = False
@@ -189,6 +192,7 @@ class Supervisor(Thread):
         self.poller = zmq.Poller()
         self.poller.register(self.router_socket, zmq.POLLIN)  # notifica cada mensagem recebida
 
+        self.mode = None
         self.run_flag = True
         self.current_pos = initial_pos
         self.robot_address = None
@@ -286,10 +290,10 @@ class Supervisor(Thread):
 
 ########################################################################################################################
 class InterfaceDeJogo(Thread):
-    def __init__(self):
+    def __init__(self, supervisor):
         super().__init__()
-        self.supervisor = None
-        self.manual = False # se for setado como true, inicia a thread
+        self.supervisor = supervisor
+        self.manual = self.supervisor.mode
 
     def set_auto(self):
         self.manual = False
@@ -299,20 +303,20 @@ class InterfaceDeJogo(Thread):
 
     def _manual_input(self):
         user_input = ' '
-        while self.manual:
-            user_input = input(">>>  ")
-            if user_input == "w": self.supervisor.manda_frente()
-            elif user_input == "d": self.supervisor.manda_direita()
-            elif user_input == "a": self.supervisor.manda_esquerda()
-            elif user_input == "s": self.supervisor.manda_tras()
-            elif user_input == "q" : pass
-            else: pass
+        user_input = input(">>>  ")
+        if user_input == "w": self.supervisor.manda_frente()
+        elif user_input == "d": self.supervisor.manda_direita()
+        elif user_input == "a": self.supervisor.manda_esquerda()
+        elif user_input == "s": self.supervisor.manda_tras()
+        elif user_input == "q" : pass
+        else: pass
 
     def run(self):
-        if self.manual: self._manual_input()
+        print("\n\nInterface de jogo\n\n")
+        while self.manual: self._manual_input()
         else:
             pass
-        self.supervisor.set_mode(self.manual)
+        # self.supervisor._set_mode(self.manual)
 
 ########################################################################################################################
 
@@ -323,14 +327,14 @@ if __name__ == '__main__':
 
     comsa = ComunicaComSA(ip, Commands.PORT_SA, name)
     supervisor = Supervisor(comsa, initial_pos)
-    jogo = InterfaceDeJogo()
 
-    supervisor.start()
+    jogo = InterfaceDeJogo(supervisor)
     comsa.set_supervisor(supervisor)
-    jogo.supervisor = supervisor
+    supervisor.start()
+    # jogo.supervisor = supervisor
 
     while not supervisor.robot_address: pass
 
-    jogo.set_auto()
+    # jogo.set_auto()
     jogo.start()
 

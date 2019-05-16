@@ -15,7 +15,7 @@ class Jogador:
 
     def __init__(self, **kwargs):
         self.id = self._get(kwargs, Commands.ID, None)
-        self.socket = self._get(kwargs, 'socket', None)
+        self._socket = self._get(kwargs, 'socket', None)
         self.pos = self._get(kwargs, Commands.INITIAL_POS, None)
         self.ip = self._get(kwargs, Commands.IP, None)
         self.score = 0
@@ -50,6 +50,8 @@ class Jogo:
         >Controla
         >gerencia mapa
         >a posição atual onde está cada robô e aposição para a qual cada robô deverá se deslocar na sua primeira movimentação.
+
+        atributo "manual": true se o jogo for manual, false se for automatico, vem por default true
     """
 
     DIMENSAO = 6  # dimensao do mapa, no NxN
@@ -61,10 +63,14 @@ class Jogo:
         # Supondo que o mapa e numero de cacas sejam estaticos.
         self.dimensao = Jogo.DIMENSAO
         self.numero_de_cacas = Jogo.NUMERO_DE_CACAS
+        self.manual = True # Modo de jogo, true se manual, false se automatico
 
         self.lista_de_cacas = []  # lista das cacas
-        self.jogador_pos = dict()  # dicionario da posicao de cada jogador {socket : (coordX, coordY) }
-        self.jogadores_dict = dict()
+        self._jogador_pos = dict()  # dicionario da posicao de cada jogador {socket : (coordX, coordY) }
+        self._jogadores_dict = dict()
+
+    def set_game_mode(self, mode):
+        self.manual = mode
 
     def sorteia_cacas(self):
         """Sorteia as cacas, retorna uma lista com n cacas, dispostas em tuplas (coordX, coordY)"""
@@ -84,12 +90,12 @@ class Jogo:
         ip = kwargs[Commands.IP]
         pos = kwargs[Commands.INITIAL_POS]
         print("Registra_jogador, id = ", id, " ip= ", ip, "pos= ", pos)
-        for player in self.jogadores_dict.values():
+        for player in self._jogadores_dict.values():
             if id == player.id:
                 return False
         else:
-            self.jogadores_dict[socket] = Jogador(socket=socket, id=id, ip=ip, pos=pos)
-            self.jogador_pos[socket] = pos
+            self._jogadores_dict[socket] = Jogador(socket=socket, id=id, ip=ip, pos=pos)
+            self._jogador_pos[socket] = pos
             return True
 
     def verifica_cacas(self, cacas):
@@ -121,11 +127,11 @@ class Jogo:
         """Atualiza a posicao do jogador"""
         coord = tuple(coord)
         if coord > (0, 0):
-            if coord not in self.jogador_pos.values():
-                self.jogador_pos[socket_jogador] = coord
-                self.jogadores_dict[socket_jogador].set_pos(coord)
-                print("Jogador: ", self.jogadores_dict[socket_jogador].id, " esta indo para ",
-                      self.jogadores_dict[socket_jogador].pos)
+            if coord not in self._jogador_pos.values():
+                self._jogador_pos[socket_jogador] = coord
+                self._jogadores_dict[socket_jogador].set_pos(coord)
+                print("Jogador: ", self._jogadores_dict[socket_jogador].id, " esta indo para ",
+                      self._jogadores_dict[socket_jogador].pos)
                 return True
 
         return False
@@ -135,7 +141,7 @@ class Jogo:
             Zera o placar dos jogadores.
         """
         player_score_dict = dict()
-        for jogador in self.jogadores_dict.values():
+        for jogador in self._jogadores_dict.values():
             player_score_dict[jogador.id] = jogador.score
             jogador.score = 0
 
@@ -144,14 +150,14 @@ class Jogo:
     def get_player_ip(self, id):
         """Retorna a pontuacao do jogador
         ID = nome do jogador"""
-        for player in self.jogadores_dict.values():
+        for player in self._jogadores_dict.values():
             if player.id == id:
                 return player.ip
 
     def update_map(self):
         """Retorna uma lista de posicao, com a posicao de cada jogador, ou seja, apenas as coord ocupadas"""
         pos_list = []
-        for jogador in self.jogadores_dict.values(): pos_list.append(jogador.pos)
+        for jogador in self._jogadores_dict.values(): pos_list.append(jogador.pos)
         return pos_list
 
 
@@ -240,10 +246,10 @@ class Auditor:
             coord = tuple(msg.data)
             print("get_flag", coord)
             if self.jogo.verifica_cacas(coord):
-                self.jogo.jogadores_dict[msg.address].increase_score()
+                self.jogo._jogadores_dict[msg.address].increase_score()
                 self._update_flags()
-                print("O jogador", self.jogo.jogadores_dict[msg.address].id, "obteve a caca em ", coord,
-                      " sua pontuacao eh ", self.jogo.jogadores_dict[msg.address].score)
+                print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
+                      " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
             else:
                 print("falhou ")
 
@@ -275,6 +281,15 @@ class Auditor:
         self._sorteia_cacas()
         self._sorteia_posicao_inicial()
         self.jogo_started = True  # seta a flag de started pra true
+        self.set_mode(Commands.MANUAL)
+
+    def set_mode(self, mode):
+        """Manual = TRUE
+           Automatico = False """
+        self.jogo.manual = mode
+        msg = Message(cmd=Commands.MODE, data=mode)
+        self._publish_socket.send(msg.serialize())
+
 
     def _sorteia_cacas(self):
         # Sorteia e envia as bandeiras
@@ -285,11 +300,11 @@ class Auditor:
 
     def _sorteia_posicao_inicial(self):
         # Sorteia e envia as posicoes iniciais
-        self.jogadores_pos = self.jogo.jogador_pos
+        self.jogadores_pos = self.jogo._jogador_pos
         for socket in self.jogadores_pos.keys():
             msg = Message(cmd=Commands.POS, data=self.jogadores_pos[socket])
             self._router_socket.send_multipart([socket, msg.serialize()])
-            print("Posicao inicial do jogador ", self.jogo.jogadores_dict[socket].id, " eh ",
+            print("Posicao inicial do jogador ", self.jogo._jogadores_dict[socket].id, " eh ",
                   self.jogadores_pos[socket])
         pass
 

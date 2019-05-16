@@ -80,3 +80,5 @@ class Commands:
     IP = "ip"
 
     MODE = "mode"
+    MANUAL = True
+    AUTOMATICO = False
