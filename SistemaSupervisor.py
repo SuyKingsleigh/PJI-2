@@ -6,6 +6,8 @@ import zmq
 from threading import Thread
 from Public import Message, Commands
 
+import mover
+
 
 class ComunicaComSA(Thread):
     """
@@ -273,16 +275,20 @@ class Supervisor(Thread):
 
 
     def manda_frente(self):
-        pass
+        msg = Message(cmd=Commands.DIRECTION, data=mover.Frente)
+        self.router_socket.send([self.robot_address, msg.serialize()])
 
     def manda_tras(self):
-        pass
+        msg = Message(cmd=Commands.DIRECTION, data=mover.TRAS)
+        self.router_socket.send([self.robot_address, msg.serialize()])
 
     def manda_direita(self):
-        pass
+        msg = Message(cmd=Commands.DIRECTION, data=mover.DIREITA)
+        self.router_socket.send([self.robot_address, msg.serialize()])
 
     def manda_esquerda(self):
-        pass
+        msg = Message(cmd=Commands.DIRECTION, data=mover.ESQUERDA)
+        self.router_socket.send([self.robot_address, msg.serialize()])
 
     def set_mode(self, mode):
         msg = Message(cmd=Commands.MODE, data=mode)

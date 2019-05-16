@@ -82,3 +82,4 @@ class Commands:
     MODE = "mode"
     MANUAL = True
     AUTOMATICO = False
+    DIRECTION = "direction"

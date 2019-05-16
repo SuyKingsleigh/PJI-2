@@ -7,6 +7,8 @@ import zmq
 from SistemaSupervisor import Supervisor
 from Public import Message, Commands
 
+import mover
+
 HOST = 'localhost'
 
 
@@ -88,6 +90,9 @@ class Comunicador(Thread):
         elif msg.cmd == Commands.UPDATE_MAP:
             self.robo.map = msg.data
 
+        elif msg.cmd == Commands.MANUAL:
+            self._process_move(msg.data)
+
         elif msg.cmd == Commands.MODE:
             if msg.data == False:
                 print("MODO AUTOMATICO")
@@ -98,6 +103,18 @@ class Comunicador(Thread):
 
     def run(self):
         self._recv()
+
+    def _process_move(self, data):
+        if data == mover.FRENTE:
+            self.robo.frente()
+        elif data == mover.TRAS:
+            self.robo.tras()
+        elif data == mover.DIREITA:
+            self.robo.direita()
+        elif data == mover.ESQUERDA:
+            self.robo.esquerda()
+        else: pass
+
 
     def try_move(self, coord):
         """tenta se mover
@@ -144,22 +161,22 @@ class Robo:
     def set_bandeiras(self, bandeiras):
         self.cacas = bandeiras
 
-    def _frente(self):
+    def frente(self):
         # anda pra frente e incrementa 1 em X
         x,y = self.current_pos[0] + 1, self.current_pos[1]
         return x,y
 
-    def _tras(self):
+    def tras(self):
         # anda pra tras e decrementa 1 em X
         x, y = self.current_pos[0] - 1, self.current_pos[1]
         return x, y
 
-    def _direita(self):
+    def direita(self):
         # anda pra direita e incrementa 1 em Y
         x, y = self.current_pos[0], self.current_pos[1] + 1
         return x, y
 
-    def _esquerda(self):
+    def esquerda(self):
         # anda pra esquerda e decrementa 1 em Y
         x, y = self.current_pos[0], self.current_pos[1] - 1
         return x, y
