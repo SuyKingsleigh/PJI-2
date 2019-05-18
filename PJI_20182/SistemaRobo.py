@@ -3,6 +3,7 @@ import sys
 import time
 from threading import Thread
 import zmq
+import socket
 
 from SistemaSupervisor import Supervisor
 from Public import Message, Commands
@@ -23,14 +24,15 @@ class Comunicador(Thread):
     """
     SLEEP_TIME = 3
 
-    def __init__(self, port, SA_ip):
+    def __init__(self, port, SA_ip, ip_robo):
         super().__init__()
         self.port = port
         self.context = zmq.Context()
+
         self.SA_ip = SA_ip
 
         self.cacas = []
-        self.robo = Robo(self)
+        self.robo = Controlador(self, ip_robo)
 
 
     def connect(self, player_id):
@@ -138,10 +140,10 @@ class Comunicador(Thread):
 
 
 ########################################################################################################################
-class Robo:
+class Controlador:
     """Classe que istancia um robo, basicamente, serve pra se mover e deu"""
 
-    def __init__(self, comunicador):
+    def __init__(self, comunicador, ip_robo):
         super().__init__()
         self.cacas = []
         self.comunicador = comunicador
@@ -151,10 +153,12 @@ class Robo:
         self.current_pos = None
         self.manual = False
 
-        try: self.mover = Mover(0,0)
-        except Exception as e:
-            pass
+        self.ip_robo = ip_robo
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.connect((self.ip_robo,42069))
 
+    def close(self):
+        self._socket.close()
 
     def _get_bandeiras(self):
         for bandeira in self.cacas:
@@ -175,7 +179,7 @@ class Robo:
         # anda pra frente e incrementa 1 em X
         x,y = self.current_pos[0] + 1, self.current_pos[1]
         try:
-            self.mover.move(Mover.FRENTE)
+            self._socket.send(Mover.FRENTE.encode())
         except Exception as e: pass
         return x,y
 
@@ -183,7 +187,7 @@ class Robo:
         # anda pra tras e decrementa 1 em X
         x, y = self.current_pos[0] - 1, self.current_pos[1]
         try:
-            self.mover.move(Mover.TRAS)
+            self._socket.send(Mover.TRAS.encode())
         except Exception as e:
             pass
         return x, y
@@ -192,7 +196,7 @@ class Robo:
         # anda pra direita e incrementa 1 em Y
         x, y = self.current_pos[0], self.current_pos[1] + 1
         try:
-            self.mover.move(Mover.DIREITA)
+            self._socket.send(Mover.DIREITA.encode())
         except Exception as e:
             pass
         return x, y
@@ -201,7 +205,7 @@ class Robo:
         # anda pra esquerda e decrementa 1 em Y
         x, y = self.current_pos[0], self.current_pos[1] - 1
         try:
-            self.mover.move(Mover.ESQUERDA)
+            self._socket.send(Mover.ESQUERDA.encode())
         except Exception as e:
             pass
         return x, y
@@ -238,16 +242,20 @@ class Robo:
 
 if __name__ == "__main__":
 
-    if len(sys.argv) == 4:
-        print("flag is", sys.argv[1])
-        ip = sys.argv[2]
-        name = sys.argv[3]
-        c = Comunicador(Commands.PORT_SA, ip)
+    if len(sys.argv) == 5:
+        print("flag is", sys.argv[1]) # flag '-S'
+        ip = sys.argv[2] # ip do supervisor
+        name = sys.argv[3] # nome do robo
+        ip_robo = sys.argv[4] # ip do robo
+
+        c = Comunicador(Commands.PORT_SA, ip, ip_robo)
         c.connect_to_supervisor(ip)
         c.start()
     else:
-        ip = sys.argv[1]
-        name = sys.argv[2]
-        c = Comunicador(Commands.PORT_SA, ip)
+        ip = sys.argv[1] # ip do auditor
+        name = sys.argv[2] # nome do robo
+        ip_robo = sys.argv[3] # ip do robo
+
+        c = Comunicador(Commands.PORT_SA, ip, ip_robo)
         c.connect(name)
         c.start()

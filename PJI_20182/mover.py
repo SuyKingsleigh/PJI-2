@@ -32,10 +32,10 @@ class Mover(Thread):
     """docstring for Mover"""
     EXIT = -1
     PARADO = 0
-    FRENTE = 1
-    DIREITA = 2
-    TRAS = 3
-    ESQUERDA = 4
+    FRENTE = "f"
+    DIREITA = "d"
+    TRAS = "t"
+    ESQUERDA = "e"
 
     PAUSA = 10
     CONTINUA = 11
