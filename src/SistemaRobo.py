@@ -8,9 +8,7 @@ import socket
 from SistemaSupervisor import Supervisor
 from Public import Message, Commands
 
-
 from mover import Mover
-
 
 HOST = 'localhost'
 
@@ -34,7 +32,6 @@ class Comunicador(Thread):
         self.cacas = []
         self.robo = Controlador(self, ip_robo)
 
-
     def connect(self, player_id):
         # cria um socket temporario, envia a solicitacao pro servidor
         socket = self.context.socket(zmq.DEALER)
@@ -48,7 +45,6 @@ class Comunicador(Thread):
         # self.SS_ip = rep.data
         self.connect_to_supervisor(rep.data)
         print(rep.data)
-
 
     def connect_to_supervisor(self, ip):
         # conecta ao respectivo S.S
@@ -87,9 +83,10 @@ class Comunicador(Thread):
             print("STOP")
 
         elif msg.cmd == Commands.INITIAL_POS:
-            pass
-            # self.robo.current_pos = msg.data
-            # print("current pos is ", self.robo.current_pos)
+
+            x, y= int(msg.data[0]), int(msg.data[1])
+            self.robo.current_pos = [x,y]
+            print("current pos is ", self.robo.current_pos)
 
         elif msg.cmd == Commands.UPDATE_MAP:
             self.robo.map = msg.data
@@ -100,7 +97,8 @@ class Comunicador(Thread):
         elif msg.cmd == Commands.MODE:
             if msg.data == False:
                 print("MODO AUTOMATICO")
-            else: print("MODO MANUAL ")
+            else:
+                print("MODO MANUAL ")
             self.robo.manual = Commands.MODE
         else:
             pass
@@ -121,8 +119,8 @@ class Comunicador(Thread):
         elif data == Mover.ESQUERDA:
             self.robo.esquerda()
             print("indo para a esquerda")
-        else: pass
-
+        else:
+            pass
 
     def try_move(self, coord):
         """tenta se mover
@@ -151,12 +149,12 @@ class Controlador:
         self.running = False
         self.daemon = Thread()
         self.map = []
-        self.current_pos = None
+        self.current_pos = -1,-1
         self.manual = False
 
         self.ip_robo = ip_robo
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._socket.connect((self.ip_robo,42069))
+        self._socket.connect((self.ip_robo, 42069))
 
     def close(self):
         self._socket.close()
@@ -178,47 +176,58 @@ class Controlador:
 
     def frente(self):
         # anda pra frente e incrementa 1 em X
-        x,y = self.current_pos[0] + 1, self.current_pos[1]
-        try:
+        self.current_pos[0], self.current_pos[1] = self.current_pos[0] + 1, self.current_pos[1]
+        try:  # envia uma mensagem para o robo para se mover
             self._socket.send(Mover.FRENTE.encode())
-        except Exception as e: pass
-        return x,y
+        except Exception as e:
+            pass
+
+        # fica bloqeuado ate receber a resposta do robo
+        while not self._socket.recv(256): pass
+        print("posicao atual eh: ", self.current_pos)
+
+        return self.current_pos[0], self.current_pos[1]
 
     def tras(self):
         # anda pra tras e decrementa 1 em X
-        x, y = self.current_pos[0] - 1, self.current_pos[1]
+        self.current_pos[0], self.current_pos[1] = self.current_pos[0] - 1, self.current_pos[1]
         try:
             self._socket.send(Mover.TRAS.encode())
         except Exception as e:
             pass
-        return x, y
+        while not self._socket.recv(256): pass
+        print("posicao atual eh: ", self.current_pos)
+        return self.current_pos[0], self.current_pos[1]
 
     def direita(self):
         # anda pra direita e incrementa 1 em Y
-        x, y = self.current_pos[0], self.current_pos[1] + 1
+        self.current_pos[0], self.current_pos[1] = self.current_pos[0], self.current_pos[1] + 1
         try:
             self._socket.send(Mover.DIREITA.encode())
         except Exception as e:
             pass
-        return x, y
+        while not self._socket.recv(256): pass
+        print("posicao atual eh: ", self.current_pos)
+        return self.current_pos[0], self.current_pos[1]
 
     def esquerda(self):
         # anda pra esquerda e decrementa 1 em Y
-        x, y = self.current_pos[0], self.current_pos[1] - 1
+        self.current_pos[0], self.current_pos[1] = self.current_pos[0], self.current_pos[1] - 1
         try:
             self._socket.send(Mover.ESQUERDA.encode())
         except Exception as e:
             pass
-        return x, y
-
+        while not self._socket.recv(256): pass
+        print("posicao atual eh: ", self.current_pos)
+        return self.current_pos[0], self.current_pos[1]
 
     def move(self, coord):
         if not coord in self.map:
             print("Robo andando para: ", coord)
-            time.sleep(random.randint(1,10))
+            time.sleep(random.randint(1, 10))
             print("chegou")
-        else: print("posicao ja ocupada")
-
+        else:
+            print("posicao ja ocupada")
 
     def start(self):
         self.daemon = Thread(target=self._run)
@@ -237,25 +246,24 @@ class Controlador:
         if not self.manual: self._get_bandeiras()
 
 
-
-
 ########################################################################################################################
 
 if __name__ == "__main__":
-
+    """PARAMETROS PARA TESTE EM LOCALHOST
+    localhost jamal localhost"""
     if len(sys.argv) == 5:
-        print("flag is", sys.argv[1]) # flag '-S'
-        ip = sys.argv[2] # ip do supervisor
-        name = sys.argv[3] # nome do robo
-        ip_robo = sys.argv[4] # ip do robo
+        print("flag is", sys.argv[1])  # flag '-S'
+        ip = sys.argv[2]  # ip do supervisor
+        name = sys.argv[3]  # nome do robo
+        ip_robo = sys.argv[4]  # ip do robo
 
         c = Comunicador(Commands.PORT_SA, ip, ip_robo)
         c.connect_to_supervisor(ip)
         c.start()
     else:
-        ip = sys.argv[1] # ip do auditor
-        name = sys.argv[2] # nome do robo
-        ip_robo = sys.argv[3] # ip do robo
+        ip = sys.argv[1]  # ip do auditor
+        name = sys.argv[2]  # nome do robo
+        ip_robo = sys.argv[3]  # ip do robo
 
         c = Comunicador(Commands.PORT_SA, ip, ip_robo)
         c.connect(name)

@@ -64,7 +64,7 @@ class ComunicaComSA(Thread):
         # dados da partida
         self.cacas = []
         self.started = False  # flag para indicar se o jogo comecou ou nao
-        self.pos = (0, 0) # posicao
+        self.pos = (0, 0)  # posicao
 
         # em alguns casos eh necessario ter acesso a camada inferior (supervisor)
         self.supervisor = None
@@ -137,7 +137,7 @@ class ComunicaComSA(Thread):
 
             else:
                 print("modo automatico")
-                self.supervisor.jogo.manual = msg.data # seta como false
+                self.supervisor.jogo.manual = msg.data  # seta como false
 
 
         elif msg.cmd == Commands.STOP:
@@ -163,7 +163,7 @@ class ComunicaComSA(Thread):
         dados = {
             Commands.ID: self.id,
             Commands.IP: self.my_ip,
-            Commands.INITIAL_POS : self.supervisor.current_pos
+            Commands.INITIAL_POS: self.supervisor.current_pos
         }  # Commands.ID = string 'id', Commands.IP = 'ip', Commands.INITIAL_POS = 'initial_pos'
         req = Message(cmd=Commands.LOGIN, data=dados)
         self.dealer_socket.send(req.serialize())
@@ -185,7 +185,6 @@ class ComunicaComSA(Thread):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
-
 
 
 ########################################################################################################################
@@ -284,19 +283,17 @@ class Supervisor(Thread):
         msg = Message(cmd=Commands.MOVE_TO, data=info)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = coord
-        print("as coord sao",self.current_pos)
+        print("as coord sao", self.current_pos)
 
     def run(self):
         self.comunica_com_sa.start()
         self.comunica_com_sa.login()
         self._handle()
 
-
     def manda_frente(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.FRENTE)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         print("frente")
-
 
     def manda_tras(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.TRAS)
@@ -318,11 +315,11 @@ class Supervisor(Thread):
         self.jogo.manual = manual
         self.jogo.start()
 
-
     def set_mode(self, mode):
         msg = Message(cmd=Commands.MODE, data=mode)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
-nome da pasta adicionado
+
+
 ########################################################################################################################
 class InterfaceDeJogo(Thread):
     def __init__(self, supervisor):
@@ -341,33 +338,46 @@ class InterfaceDeJogo(Thread):
         user_input = 'hue'
         user_input = input(">>>  ")
         if user_input == "w":
-            if self.manual: self.supervisor.manda_frente()
-            else: print("esta no modo automatico")
+            if self.manual:
+                self.supervisor.manda_frente()
+            else:
+                print("esta no modo automatico")
         elif user_input == "d":
-            if self.manual: self.supervisor.manda_direita()
-            else: print("esta no modo automatico")
+            if self.manual:
+                self.supervisor.manda_direita()
+            else:
+                print("esta no modo automatico")
         elif user_input == "a":
-            if self.manual: self.supervisor.manda_esquerda()
-            else: print("esta no modo automatico")
+            if self.manual:
+                self.supervisor.manda_esquerda()
+            else:
+                print("esta no modo automatico")
         elif user_input == "s":
-            if self.manual: self.supervisor.manda_tras()
-            else: print("esta no modo automatico")
-        elif user_input == "q" :
+            if self.manual:
+                self.supervisor.manda_tras()
+            else:
+                print("esta no modo automatico")
+        elif user_input == "q":
             if self.manual: pass
         elif user_input == " ":
             # todo get flag
             pass
-        else: pass
+        else:
+            pass
 
     def run(self):
         print("\n\nInterface de jogo\n\n")
         while self.manual: self._manual_input()
+
+
 ########################################################################################################################
 
 if __name__ == '__main__':
+    """PARAMETROS PARA TESTE EM LOCALHOST
+    localhost jamal 0 0"""
     ip = sys.argv[1]
     name = sys.argv[2]
-    initial_pos = (0,0)
+    initial_pos = sys.argv[3], sys.argv[4]
 
     comsa = ComunicaComSA(ip, Commands.PORT_SA, name)
     supervisor = Supervisor(comsa, initial_pos)
@@ -380,4 +390,3 @@ if __name__ == '__main__':
 
     # jogo.set_auto()
     # jogo.start()
-

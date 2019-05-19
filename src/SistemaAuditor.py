@@ -64,7 +64,7 @@ class Jogo:
         # Supondo que o mapa e numero de cacas sejam estaticos.
         self.dimensao = Jogo.DIMENSAO
         self.numero_de_cacas = Jogo.NUMERO_DE_CACAS
-        self.manual = True # Modo de jogo, true se manual, false se automatico
+        self.manual = True  # Modo de jogo, true se manual, false se automatico
 
         self.lista_de_cacas = []  # lista das cacas
         self._jogador_pos = dict()  # dicionario da posicao de cada jogador {socket : (coordX, coordY) }
@@ -292,7 +292,6 @@ class Auditor:
         self._publish_socket.send(msg.serialize())
         if mode: print("modo manual")
 
-
     def _sorteia_cacas(self):
         # Sorteia e envia as bandeiras
         self.cacas = self.jogo.sorteia_cacas()
@@ -356,7 +355,6 @@ class InterfaceAuditora:
     def __init__(self, port):
         self.auditor = Auditor(port)
         self.auditor.run()
-
 
     def run(self):
         """le a entrada padrao
