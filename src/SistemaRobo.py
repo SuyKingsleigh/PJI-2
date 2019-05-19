@@ -87,8 +87,9 @@ class Comunicador(Thread):
             print("STOP")
 
         elif msg.cmd == Commands.INITIAL_POS:
-            self.robo.current_pos = msg.data
-            print("current pos is ", self.robo.current_pos)
+            pass
+            # self.robo.current_pos = msg.data
+            # print("current pos is ", self.robo.current_pos)
 
         elif msg.cmd == Commands.UPDATE_MAP:
             self.robo.map = msg.data

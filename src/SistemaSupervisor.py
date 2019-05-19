@@ -22,6 +22,8 @@ class ComunicaComSA(Thread):
                 * Start = Inicia partida
                 * Stop = Termina Partida
                 * Update_Flags = Atualiza bandeiras
+                * update_map = atualiza lista de posicoes ocupadas
+                * MODE = Define o modo de jogo
         Thread 2:
             Responsavel por enviar requisicoes e receber respostas individuais do servidor, ou seja, tudo enviado e
             recebido pelo Socket Dealer.
@@ -101,7 +103,7 @@ class ComunicaComSA(Thread):
             # pos = Message(0, pos)
             # self.pos = pos.data
             print("Posicao inicial: ", self.pos)
-            self.supervisor.move(self.pos)
+            # self.supervisor.move(self.pos)
             # envia as bandeiras pro sistema do robo
             self.supervisor.send_bandeiras()
             self.supervisor.start_robot()
@@ -245,8 +247,6 @@ class Supervisor(Thread):
             msg = Message(cmd=Commands.INITIAL_POS, data=self.current_pos)
             self._send_reply(address, msg.serialize())
 
-        elif msg.cmd == Commands.GET_FLAG:
-            self.comunica_com_sa.get_flag(msg.data)
         else:
             pass
             # nada acontece, feijoada
@@ -269,7 +269,7 @@ class Supervisor(Thread):
     def start_robot(self):
         msg = Message(cmd=Commands.START)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
-        self.manda_frente()
+        # self.manda_frente()
 
     def stop(self):
         msg = Message(cmd=Commands.STOP)
@@ -322,7 +322,7 @@ class Supervisor(Thread):
     def set_mode(self, mode):
         msg = Message(cmd=Commands.MODE, data=mode)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
-
+nome da pasta adicionado
 ########################################################################################################################
 class InterfaceDeJogo(Thread):
     def __init__(self, supervisor):

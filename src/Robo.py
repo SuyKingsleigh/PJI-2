@@ -72,6 +72,6 @@ if __name__ == "__main__":
     port = 42069
     # print(sys.argv)
     ip = sys.argv[1]
-    coord = sys.argv[2], sys.argv[3]# 5 pq eh separado com virgula
+    coord = sys.argv[2], sys.argv[3]
     # coord = 0,0
     Robo(ip,port,coord).run()
