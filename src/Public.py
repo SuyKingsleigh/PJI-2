@@ -1,6 +1,21 @@
 import json
 
 class Message:
+    """Exemplos de uso:
+    ENVIANDO UMA MENSAGEM:
+
+    msg = Message(cmd=Commands.ALGUM_COMANDO, data=ALGUMA_COISA)
+    msg_serializada = msg.serialize()
+    socket.envia(msg_serializada)
+
+    RECEBENDO UMA MENSAGEM:
+    resposta = socket.recebe()
+    resposta = Message(0, resposta)
+
+    ATRIBUTOS
+    cmd=Comando enviado, todos estao descritos na classe Commands
+    data=Lista, String, Tabela Hash, Boolean, Inteiro, etc
+    """
     def __init__(self, address='' ,raw_data='', **kwargs):
 
         # raw_data: mensagem em json vinda do cliente
