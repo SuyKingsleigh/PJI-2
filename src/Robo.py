@@ -4,7 +4,7 @@ import time
 from threading import Thread
 
 from Public import Commands
-from src.mover import *
+from mover import *
 
 
 class Robo(Thread):
@@ -19,11 +19,12 @@ class Robo(Thread):
         self.coord_inicial = coord_inicial
         try:
             self.motor = Mover(self.coord_inicial[0], self.coord_inicial[1])
+            print("motor connected")
         except Exception as e:
-            pass
+            print("failled to connect motor", e)
 
     def _process_data(self, msg):
-        print(msg)
+        # print(msg)
         if msg == Mover.FRENTE:
             print("frente")
             try:

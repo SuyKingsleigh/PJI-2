@@ -8,7 +8,7 @@ import socket
 from SistemaSupervisor import Supervisor
 from Public import Message, Commands
 
-from mover import Mover
+from mover import *
 
 HOST = 'localhost'
 

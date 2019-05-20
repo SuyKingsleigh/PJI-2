@@ -8,7 +8,7 @@ from threading import Thread
 from Public import Message, Commands
 
 from mover import *
-import mover
+# import mover
 
 
 class ComunicaComSA(Thread):
