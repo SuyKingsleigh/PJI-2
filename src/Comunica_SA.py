@@ -5,8 +5,7 @@ import zmq
 
 # from src.Public import Commands
 
-
-class Comunica_SA(Thread):
+class Comunica_SA:
     def __init__(self, port, ip):
         super().__init__()
         self.daemon = True
@@ -23,6 +22,7 @@ class Comunica_SA(Thread):
         self.dealer_socket = self.context.socket(zmq.DEALER)
         self._sub_socket = self.context.socket(zmq.SUB)
 
+
         # inscreve para todos os topicos
         self._sub_socket.setsockopt(zmq.SUBSCRIBE, b"")
         self._sub_socket.setsockopt(zmq.LINGER, 0)
@@ -30,7 +30,6 @@ class Comunica_SA(Thread):
         # conecta os sockets
         self._sub_socket.connect("tcp://%s:%d" % (self.servers_ip, port))
         self.dealer_socket.connect("tcp://%s:%d" % (self.servers_ip, self.port + 1))
-
 
 
     def _get_my_ip(self):
@@ -58,6 +57,12 @@ class Comunica_SA(Thread):
         self.dealer_socket.send(req.serialize())
         self._read_rep()
 
+    def _read_rep(self):
+        resp = self.dealer_socket.recv()
+        resp = Message(0, resp)
+        print("status: ", resp.data[Commands.STATUS], "\ninfo: ", resp.data['info'])
+        return resp.data[Commands.STATUS]
+
     def try_move(self, coord):
         """
         informa ao supervisor que ta indo pra coord
@@ -74,7 +79,8 @@ class Comunica_SA(Thread):
         self.dealer_socket.send(req.serialize())
 
     def _recv(self):
-        while self._thread_run_flag:
+        print("iniciou a thread")
+        while True:
             ans = self._sub_socket.recv()
             rep = Message(0, ans)
             self._process_broadcast_messages(rep)
@@ -91,17 +97,19 @@ class Comunica_SA(Thread):
             # recebe a lista de cacas
             # so recebe essa mensagem uma vez, que eh no inicio da partida
             lista_de_cacas = msg.data
-
+            print("lista de cacas ", lista_de_cacas)
 
         elif msg.cmd == Commands.UPDATE_MAP:
             # recebe uma lista com a posicao de cada jogador
             # toda vez q um jogador se mexer, essa lista sera atualizada
             mapa_atualizado = msg.data
+            print("mapa atualizado", mapa_atualizado)
 
         elif msg.cmd == Commands.UPDATE_FLAGS:
             # recebe a lista de bandeiras atualizadas
             # toda vez que alguem obter uma bandeira, essa lista sera atualizada
             lista_de_cacas = msg.data
+            print("lista de cacas ", lista_de_cacas)
 
         elif msg.cmd == Commands.MODE:
             # recebe o modo de jogo
@@ -110,14 +118,37 @@ class Comunica_SA(Thread):
             # quem define o modo de jogo eh o arbitro
 
             modo_de_jogo = msg.data
+            if modo_de_jogo: print("manual\n")
+            else: print("automatico\n")
 
         elif msg.cmd == Commands.STOP:
             # metodo para parar a partida
             # nao tem dados
+            print("PARA ESSA PORRA DE JOGO, BICHO")
             pass
         else:
             pass
 
     def run(self):
-        '''Inicia a Thread, a qual ira tratar todas as mensagens Broadcast do servidor '''
-        self._recv()
+        '''Inicia a Thread, a qual ira tratar todas as mensagens Broadcast  do servidor '''
+        self.daemon = Thread(target=self._recv, name="recebe_mensagens")
+        self.daemon.daemon = False
+        self.daemon.start()
+
+
+if __name__ == "__main__":
+
+    # cria objeto e inicia thread
+    com = Comunica_SA(Commands.PORT_SA, "localhost")
+    com.run()
+
+    # testa login
+    com.login("ID de teste", (-1,-1)) # id do robo e posicao inicial
+    # tem que da o start no auditor para que ele envie a lista de cacas
+    # dai eh so digitar uma caca da lista pra testar
+    # vai ficar meio bugado pq vai ter duas threads escrevendo no mesmo terminal
+    coord = int(input("\nX: ")), int(input("Y: "))
+    com.get_flag(coord)
+
+    # testa mover
+    com.try_move((0,2))

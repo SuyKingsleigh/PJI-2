@@ -331,6 +331,7 @@ class Auditor:
             events = dict(self._poller.poll(timeout=None))  # dicionario = {SOCKET : EVENTO}
             for event in events:
                 address, req = self._router_socket.recv_multipart()
+                print(req)
                 msg = Message(address, req)
                 self._process_request(msg)
 
