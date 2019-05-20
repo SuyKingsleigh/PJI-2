@@ -7,6 +7,8 @@ from Public import Commands
 from mover import Mover
 from manual import Manual
 
+from automatico import Automatico
+
 
 class Robo(Thread):
     """essa classe eh para ser executada no robo, a unica coisa que essa classe faz
@@ -18,6 +20,8 @@ class Robo(Thread):
         self.port = port
         self.ip = ip
         self.coord_inicial = coord_inicial
+        self.manual = True
+
         try:
             self.motor = Manual((self.coord_inicial[0], self.coord_inicial[1]))
             print("motor connected")

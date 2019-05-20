@@ -357,6 +357,8 @@ class InterfaceDeJogo(Thread):
                 self.supervisor.manda_tras()
             else:
                 print("esta no modo automatico")
+        elif user_input == " ":
+            pass
         elif user_input == "q":
             if self.manual: pass
         elif user_input == " ":
