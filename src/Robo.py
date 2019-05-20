@@ -4,7 +4,7 @@ import time
 from threading import Thread
 
 from Public import Commands
-from mover import Mover
+from src.mover import *
 
 
 class Robo(Thread):
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     localhost 0 0"""
     port = 42069
     # print(sys.argv)
-    ip = sys.argv[1]
-    coord = sys.argv[2], sys.argv[3]
+    # ip = sys.argv[1]
+    coord = sys.argv[1], sys.argv[2]
     # coord = 0,0
-    Robo(ip, port, coord).run()
+    Robo("0.0.0.0", port, coord).run()
