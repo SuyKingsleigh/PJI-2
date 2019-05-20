@@ -4,7 +4,8 @@ import time
 from threading import Thread
 
 from Public import Commands
-from mover import *
+from mover import Mover
+from manual import Manual
 
 
 class Robo(Thread):
@@ -18,7 +19,7 @@ class Robo(Thread):
         self.ip = ip
         self.coord_inicial = coord_inicial
         try:
-            self.motor = Mover(self.coord_inicial[0], self.coord_inicial[1])
+            self.motor = Manual((self.coord_inicial[0], self.coord_inicial[1]))
             print("motor connected")
         except Exception as e:
             print("failled to connect motor", e)

@@ -72,7 +72,7 @@ class Manual(Thread):
 		shared_obj.wait_event(SharedObj.MoverCoordenadaEvent)
 		# Pega proxima coord
 		prox_coord = shared_obj.get(SharedObj.MoverCoordenada)
-		print('prox coord: ' + prox_coord)
+		# print('prox coord: ' + prox_coord)
 		# Limpa evento mover coordenada
 		shared_obj.clear_event(SharedObj.MoverCoordenadaEvent)
 		# Envia ao SS a coordenada que o robo esta indo

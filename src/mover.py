@@ -2,7 +2,7 @@ from ev3dev.ev3 import *
 from time import time, sleep
 from threading import Thread, Lock
 from copy import deepcopy
-from shared import SharedObj
+from shared import *
 
 
 class Cor(object):
@@ -247,6 +247,7 @@ class Mover(Thread):
     def _go_front(self):
         self.sensor_luminosidade.mode = 'COL-COLOR'
         cor = self.sensor_luminosidade.value()
+        print("go front colour: ", cor)
         self.motor_esquerda.run_forever(speed_sp=100)
         self.motor_direita.run_forever(speed_sp=100)
         while True:
@@ -258,6 +259,7 @@ class Mover(Thread):
     def _go_back(self):
         self.sensor_luminosidade.mode = 'COL-COLOR'
         cor = self.sensor_luminosidade.value()
+        print("go back colour: ", cor)
         self.motor_esquerda.run_forever(speed_sp=-100)
         self.motor_direita.run_forever(speed_sp=-100)
         while True:
