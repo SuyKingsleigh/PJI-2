@@ -31,10 +31,6 @@ class Comunica_SA(Thread):
         self._sub_socket.connect("tcp://%s:%d" % (self.servers_ip, port))
         self.dealer_socket.connect("tcp://%s:%d" % (self.servers_ip, self.port + 1))
 
-        # dados da partida
-        self.cacas = []
-        self.started = False  # flag para indicar se o jogo comecou ou nao
-
 
 
     def _get_my_ip(self):
@@ -77,3 +73,51 @@ class Comunica_SA(Thread):
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
 
+    def _recv(self):
+        while self._thread_run_flag:
+            ans = self._sub_socket.recv()
+            rep = Message(0, ans)
+            self._process_broadcast_messages(rep)
+
+
+
+    def _process_broadcast_messages(self, msg):
+        print("Comando recebido : ", msg.cmd, "\nDados: ", msg.data)
+        # Processa Mensagens vindas do socket subscribe
+        # nem todas as mensagens terao resposta
+
+
+        if msg.cmd == Commands.START:
+            # recebe a lista de cacas
+            # so recebe essa mensagem uma vez, que eh no inicio da partida
+            lista_de_cacas = msg.data
+
+
+        elif msg.cmd == Commands.UPDATE_MAP:
+            # recebe uma lista com a posicao de cada jogador
+            # toda vez q um jogador se mexer, essa lista sera atualizada
+            mapa_atualizado = msg.data
+
+        elif msg.cmd == Commands.UPDATE_FLAGS:
+            # recebe a lista de bandeiras atualizadas
+            # toda vez que alguem obter uma bandeira, essa lista sera atualizada
+            lista_de_cacas = msg.data
+
+        elif msg.cmd == Commands.MODE:
+            # recebe o modo de jogo
+            # modo_de_jogo eh true se for manual
+            # modo_de_jogo eh false se for automatico
+            # quem define o modo de jogo eh o arbitro
+
+            modo_de_jogo = msg.data
+
+        elif msg.cmd == Commands.STOP:
+            # metodo para parar a partida
+            # nao tem dados
+            pass
+        else:
+            pass
+
+    def run(self):
+        '''Inicia a Thread, a qual ira tratar todas as mensagens Broadcast do servidor '''
+        self._recv()
