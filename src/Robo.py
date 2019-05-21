@@ -3,7 +3,7 @@ import sys
 import time
 from threading import Thread
 
-from Public import Commands
+from Public import *
 from mover import Mover
 from manual import Manual
 
@@ -22,6 +22,9 @@ class Robo(Thread):
         self.coord_inicial = coord_inicial
         self.manual = True
 
+        self.map = []
+        self.flags = []
+
         try:
             self.motor = Manual((self.coord_inicial[0], self.coord_inicial[1]))
             print("motor connected")
@@ -30,7 +33,7 @@ class Robo(Thread):
 
     def _process_data(self, msg):
         # print(msg)
-        if msg == Mover.FRENTE:
+        if msg.cmd == Mover.FRENTE:
             print("frente")
             try:
                 self.motor.move(Mover.FRENTE)
@@ -38,7 +41,7 @@ class Robo(Thread):
                 pass
             self.connection.send("200".encode())
 
-        elif msg == Mover.TRAS:
+        elif msg.cmd == Mover.TRAS:
             print("tras")
             try:
                 self.motor.move(Mover.TRAS)
@@ -46,7 +49,7 @@ class Robo(Thread):
                 pass
             self.connection.send("200".encode())
 
-        elif msg == Mover.DIREITA:
+        elif msg.cmd == Mover.DIREITA:
             print("direita")
             try:
                 self.motor.move(Mover.DIREITA)
@@ -54,7 +57,7 @@ class Robo(Thread):
                 pass
             self.connection.send("200".encode())
 
-        elif msg == Mover.ESQUERDA:
+        elif msg.cmd == Mover.ESQUERDA:
             print("esquerda")
             try:
                 self.motor.move(Mover.ESQUERDA)
@@ -66,10 +69,20 @@ class Robo(Thread):
             self.join()
             self.socket.close()
 
-        elif not msg: time.sleep(1)
+        elif not msg:
+            time.sleep(1)
+
+        elif msg.cmd == Commands.UPDATE_MAP:
+            print("mapa: ", msg.data)
+            self.map = msg.data
+
+        elif msg.cmd == Commands.UPDATE_FLAGS:
+            print("bandeiras: ", msg.data)
+            self.flags = msg.data
 
         else:
             pass
+            # time.sleep(0.5)
 
     def _connect(self):
         """Conecta o robo ao controlador"""
@@ -82,8 +95,8 @@ class Robo(Thread):
     def _handle(self):
         while True:
             try:
-                msg = self.connection.recv(256).decode()
-                print("msg")
+                msg = self.connection.recv(2048)
+                msg = Message(None, msg)
                 self._process_data(msg)
             except Exception as e:
                 print(e)

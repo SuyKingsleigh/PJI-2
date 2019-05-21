@@ -292,24 +292,28 @@ class Supervisor(Thread):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.FRENTE)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+        # self.move(self.current_pos)
         print("frente")
 
     def manda_tras(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.TRAS)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
+        # self.move(self.current_pos)
         print("tras")
 
     def manda_direita(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.DIREITA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
+        # self.move(self.current_pos)
         print("direita")
 
     def manda_esquerda(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.ESQUERDA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
+        # self.move(self.current_pos)
         print("esquerda")
 
     def start_interface(self, manual):

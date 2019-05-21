@@ -75,6 +75,7 @@ class Comunicador(Thread):
         elif msg.cmd == Commands.UPDATE_FLAGS:
             print("bandeiras a pegar", msg.data)
             self.robo.set_bandeiras(msg.data)
+            self.robo.send_flags(msg.data)
             if not self.robo.is_alive():
                 self.robo.start()  # caso a thread nao tenha sido iniciada, inicia-a
         elif msg.cmd == Commands.STOP:
@@ -152,7 +153,7 @@ class Controlador:
         self.manual = False
 
         self.ip_robo = ip_robo
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket = socket.socket() # socket.AF_INET, socket.SOCK_STREAM
         self._socket.connect((self.ip_robo, 42069))
 
     def close(self):
@@ -177,7 +178,7 @@ class Controlador:
         # anda pra frente e incrementa 1 em X
         self.current_pos[0], self.current_pos[1] = self.current_pos[0] + 1, self.current_pos[1]
         try:  # envia uma mensagem para o robo para se mover
-            self._socket.send(Mover.FRENTE.encode())
+            self._socket.send(Message(cmd=Mover.FRENTE).serialize())
         except Exception as e:
             pass
 
@@ -187,11 +188,17 @@ class Controlador:
 
         return self.current_pos[0], self.current_pos[1]
 
+    def send_flags(self, bandeiras):
+        self._socket.send(Message(cmd=Commands.UPDATE_FLAGS, data=bandeiras).serialize())
+
+    def send_map(self, map):
+        self._socket.send(Message(cmd=Commands.UPDATE_MAP, data=map).serialize())
+
     def tras(self):
         # anda pra tras e decrementa 1 em X
         self.current_pos[0], self.current_pos[1] = self.current_pos[0] - 1, self.current_pos[1]
         try:
-            self._socket.send(Mover.TRAS.encode())
+            self._socket.send(Message(cmd=Mover.TRAS).serialize())
         except Exception as e:
             pass
         while not self._socket.recv(256): pass
@@ -202,7 +209,7 @@ class Controlador:
         # anda pra direita e incrementa 1 em Y
         self.current_pos[0], self.current_pos[1] = self.current_pos[0], self.current_pos[1] + 1
         try:
-            self._socket.send(Mover.DIREITA.encode())
+            self._socket.send(Message(cmd=Mover.DIREITA).serialize())
         except Exception as e:
             pass
         while not self._socket.recv(256): pass
@@ -213,7 +220,8 @@ class Controlador:
         # anda pra esquerda e decrementa 1 em Y
         self.current_pos[0], self.current_pos[1] = self.current_pos[0], self.current_pos[1] - 1
         try:
-            self._socket.send(Mover.ESQUERDA.encode())
+
+            self._socket.send(Message(cmd=Mover.ESQUERDA).serialize())
         except Exception as e:
             pass
         while not self._socket.recv(256): pass
@@ -242,7 +250,7 @@ class Controlador:
 
     def _run(self):
         if not self.running: self.running = True
-        if not self.manual: self._get_bandeiras()
+        # if not self.manual: self._get_bandeiras()
 
 
 ########################################################################################################################
