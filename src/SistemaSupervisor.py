@@ -13,8 +13,6 @@ from mover import *
 # import mover
 
 
-global blocked
-
 class ComunicaComSA(Thread):
     """
         Esta classe efetua a comunicacao entre o Sistema Supervisor e o Sistema Auditor
@@ -73,8 +71,7 @@ class ComunicaComSA(Thread):
         # em alguns casos eh necessario ter acesso a camada inferior (supervisor)
         self.supervisor = None
         self.name = "comunicacomsa"
-        self.blocked = False
-        blocked = False
+
     def set_supervisor(self, supervisor):
         self.supervisor = supervisor
 
@@ -103,6 +100,12 @@ class ComunicaComSA(Thread):
             self.cacas = msg.data
             print("Lista de cacas: ", self.cacas)
 
+            # recebe a posicao inicial
+            # pos = self.dealer_socket.recv()
+            # pos = Message(0, pos)
+            # self.pos = pos.data
+            print("Posicao inicial: ", self.pos)
+            # self.supervisor.move(self.pos)
             # envia as bandeiras pro sistema do robo
             self.supervisor.send_bandeiras()
             self.supervisor.start_robot()
@@ -144,7 +147,6 @@ class ComunicaComSA(Thread):
             # self.thread_run_flag = False
             self.supervisor.stop()
             print("FIM DA PARTIDA ")
-
         else:
             pass
 
@@ -155,8 +157,8 @@ class ComunicaComSA(Thread):
     def _read_rep(self):
         resp = self.dealer_socket.recv()
         resp = Message(0, resp)
-        print("status: ", resp.data[Commands.STATUS], "\ninfo: ", resp.data['info'])
-        return resp.data[Commands.STATUS]
+        # print("status: ", resp.data[Commands.STATUS], "\ninfo: ", resp.data['info'])
+        return resp.data == '200'
 
     def login(self):
         '''Metodo  para o Login no jogo, envia a ID do robo'''
@@ -173,23 +175,19 @@ class ComunicaComSA(Thread):
         """informa ao supervisor que ta indo pra coord"""
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
-
+        # if self._read_rep() == 200:
+        #     self.pos = coord
+        #     print("Ma current pos is: ", self.pos)
+        #     return True
+        #
+        # print("Ma current pos is: ", self.pos)
+        # return False
 
     def get_flag(self, coord):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
-        self.blocked = True
-        # blocked = True
-        print("esta bloqueado", self.blocked)
-        while True:
-            resp = self.dealer_socket.recv()
-            resp = Message(0, resp)
-            if resp.cmd == Commands.STATUS_GET_FLAG: break
-
-        self.blocked = False
-        # blocked = False
-        print("\ndesbloqueou :3")
+        return self._read_rep()
 
 
 ########################################################################################################################
@@ -294,25 +292,25 @@ class Supervisor(Thread):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.FRENTE)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
-        print("frente, Current pos=", self.current_pos)
+        print("frente")
 
     def manda_tras(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.TRAS)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
-        print("tras, current pos=", self.current_pos)
+        print("tras")
 
     def manda_direita(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.DIREITA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
-        print("direita, current pos=", self.current_pos)
+        print("direita")
 
     def manda_esquerda(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.ESQUERDA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
-        print("esquerda, current pos=", self.current_pos)
+        print("esquerda")
 
     def start_interface(self, manual):
         self.jogo = InterfaceDeJogo(self)
@@ -322,9 +320,6 @@ class Supervisor(Thread):
     def set_mode(self, mode):
         msg = Message(cmd=Commands.MODE, data=mode)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
-
-    def is_blocked(self):
-        return self.comunica_com_sa.blocked
 
 
 ########################################################################################################################
@@ -345,33 +340,29 @@ class InterfaceDeJogo(Thread):
         user_input = 'hue'
         user_input = input(">>>  ")
         if user_input == "w":
-            if self.manual and not self.supervisor.is_blocked():
+            if self.manual:
                 self.supervisor.manda_frente()
             else:
-                print("esta no modo automatico ou bloqueado")
-
+                print("esta no modo automatico")
         elif user_input == "d":
-            if self.manual and not self.supervisor.is_blocked():
+            if self.manual:
                 self.supervisor.manda_direita()
             else:
-                print("esta no modo automatico ou bloqueado")
-
+                print("esta no modo automatico")
         elif user_input == "a":
-            if self.manual and not self.supervisor.is_blocked():
+            if self.manual:
                 self.supervisor.manda_esquerda()
             else:
-                print("esta no modo automatico ou bloqueado")
-
+                print("esta no modo automatico")
         elif user_input == "s":
-            if self.manual and not self.supervisor.is_blocked():
+            if self.manual:
                 self.supervisor.manda_tras()
             else:
-                print("esta no modo automatico ou bloqueado")
-
+                print("esta no modo automatico")
         elif user_input == " ":
             print("gettin flag at", self.supervisor.current_pos)
-            self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos)
-
+            if self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos): print("obteve bandeira")
+            else: print("n obteve bandeira")
         elif user_input == "q":
             if self.manual: pass
         else:
@@ -400,4 +391,5 @@ if __name__ == '__main__':
 
     while not supervisor.robot_address: pass
 
-
+    # jogo.set_auto()
+    # jogo.start()

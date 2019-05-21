@@ -66,8 +66,7 @@ class Robo(Thread):
             self.join()
             self.socket.close()
 
-        elif not msg:
-            time.sleep(1)
+        elif not msg: time.sleep(1)
 
         else:
             pass
@@ -104,4 +103,4 @@ if __name__ == "__main__":
     # coord = 0,0
     Robo("0.0.0.0", port, coord).run()
 
-    # lsof -w -n -i tcp:42069 (matar processo na porta 42069
+    # lsof -t -i:42069
