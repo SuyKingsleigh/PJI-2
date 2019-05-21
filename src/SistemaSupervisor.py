@@ -157,8 +157,8 @@ class ComunicaComSA(Thread):
     def _read_rep(self):
         resp = self.dealer_socket.recv()
         resp = Message(0, resp)
-        print("status: ", resp.data[Commands.STATUS], "\ninfo: ", resp.data['info'])
-        return resp.data[Commands.STATUS]
+        # print("status: ", resp.data[Commands.STATUS], "\ninfo: ", resp.data['info'])
+        return resp.data == '200'
 
     def login(self):
         '''Metodo  para o Login no jogo, envia a ID do robo'''
@@ -187,6 +187,7 @@ class ComunicaComSA(Thread):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
+        return self._read_rep()
 
 
 ########################################################################################################################
@@ -360,12 +361,10 @@ class InterfaceDeJogo(Thread):
                 print("esta no modo automatico")
         elif user_input == " ":
             print("gettin flag at", self.supervisor.current_pos)
-            self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos)
+            if self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos): print("obteve bandeira")
+            else: print("n obteve bandeira")
         elif user_input == "q":
             if self.manual: pass
-        elif user_input == " ":
-            # todo get flag
-            pass
         else:
             pass
 

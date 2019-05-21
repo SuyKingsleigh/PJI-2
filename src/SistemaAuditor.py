@@ -219,8 +219,13 @@ class Auditor:
 
     # Processa as requisicoes individuais de cada S.S.
     def _process_request(self, msg):
+        """
+        cmd=Login -> resposta; cmd=STATUS ; data = 200 ou 400
+        cmd=Move_To -> resposta: nenhuma
+        cmd=get_flag -> resposta:cmd=status ; data = 200 ou 400
+        cmd=get_ip -> resposta: cmd=get_ip ; data= ip
+        """
         print("msg.cmd:  ", msg.cmd)
-        # cadastra o S.S
         if msg.cmd == Commands.LOGIN:
             if self.jogo.registra_jogador(msg.address, msg.data):
                 print(msg.data)
@@ -243,16 +248,9 @@ class Auditor:
 
         # valida ou nao uma caca, caso seja validada, envia a todos a nova lista de cacas
         # atualiza placar tb
+        # envia uma mensagem individual ao jogador, liberando seu movimento.
         elif msg.cmd == Commands.GET_FLAG:
-            coord = tuple(msg.data)
-            print("get_flag", coord)
-            if self.jogo.verifica_cacas(coord):
-                self.jogo._jogadores_dict[msg.address].increase_score()
-                self._update_flags()
-                print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
-                      " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
-            else:
-                print("falhou ")
+            self._process_flag_request(msg)
 
         elif msg.cmd == Commands.GET_IP:
             ip = self.jogo.get_player_ip(msg.data)
@@ -273,6 +271,28 @@ class Auditor:
     def _send_status(self, info, address):
         resp = Message(cmd=Commands.STATUS, data=info)
         self._router_socket.send_multipart([address, resp.serialize()])
+
+    def _process_flag_request(self, msg):
+        coord = tuple(msg.data)
+        print("get_flag", coord)
+        if self.jogo.verifica_cacas(coord):
+            self.jogo._jogadores_dict[msg.address].increase_score()
+            self._update_flags()
+            user_input = input("a caca eh valida, digite 'ok' para confirmar")
+            if user_input == 'ok':
+                print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
+                      " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
+                ans = Message(cmd=Commands.STATUS,data=200)
+                self._router_socket.send_multipart([msg.address, ans.serialize()])
+                print("sent")
+        else:
+            user_input = input("ah caca eh invalida, digite 'ok' para confirmar")
+            if user_input == 'ok':
+                print("falhou ao obter a bandeira")
+                ans = Message(cmd=Commands.STATUS,data=200)
+                self._router_socket.send_multipart([msg.address, ans.serialize()])
+                print("sent")
+
 
     def inicia_partida(self):
         """Sorteia cacas do jogo, envia a lista das cacas para todos os robos
