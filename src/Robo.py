@@ -102,3 +102,5 @@ if __name__ == "__main__":
     coord = sys.argv[1], sys.argv[2]
     # coord = 0,0
     Robo("0.0.0.0", port, coord).run()
+
+    # lsof -w -n -i tcp:42069 (matar processo na porta 42069

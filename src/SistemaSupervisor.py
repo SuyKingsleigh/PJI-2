@@ -8,6 +8,8 @@ from threading import Thread
 from Public import Message, Commands
 
 from mover import *
+
+
 # import mover
 
 
@@ -232,12 +234,7 @@ class Supervisor(Thread):
         elif msg.cmd == Commands.MOVE_TO:
             self.current_pos = msg.data
             self.comunica_com_sa.try_move(msg.data)
-            # if self.comunica_com_sa.try_move(msg.data):
-            #     msg = Message(cmd=Commands.STATUS, data=200)
-            #     self._send_reply(address, msg.serialize())
-            # else:
-            #     msg = Message(cmd=Commands.STATUS, data=400)
-            #     self._send_reply(address, msg.serialize())
+
 
         # robo estabelece conexao com o seu respectivo supervisor
         elif msg.cmd == Commands.CONNECT_TO_SS:
@@ -293,21 +290,25 @@ class Supervisor(Thread):
     def manda_frente(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.FRENTE)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         print("frente")
 
     def manda_tras(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.TRAS)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         print("tras")
 
     def manda_direita(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.DIREITA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         print("direita")
 
     def manda_esquerda(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.ESQUERDA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         print("esquerda")
 
     def start_interface(self, manual):
@@ -358,7 +359,8 @@ class InterfaceDeJogo(Thread):
             else:
                 print("esta no modo automatico")
         elif user_input == " ":
-            pass
+            print("gettin flag at", self.supervisor.current_pos)
+            self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos)
         elif user_input == "q":
             if self.manual: pass
         elif user_input == " ":
