@@ -278,7 +278,7 @@ class Auditor:
         if self.jogo.verifica_cacas(coord):
             self.jogo._jogadores_dict[msg.address].increase_score()
             self._update_flags()
-            user_input = input("a caca eh valida, digite 'ok' para confirmar")
+            user_input = input("\na caca eh valida, digite 'ok' para confirmar\n")
             if user_input == 'ok':
                 print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
                       " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
@@ -286,7 +286,7 @@ class Auditor:
                 self._router_socket.send_multipart([msg.address, ans.serialize()])
                 print("sent")
         else:
-            user_input = input("ah caca eh invalida, digite 'ok' para confirmar")
+            user_input = input("\nah caca eh invalida, digite 'ok' para confirmar\n")
             if user_input == 'ok':
                 print("falhou ao obter a bandeira")
                 ans = Message(cmd=Commands.STATUS,data=200)
