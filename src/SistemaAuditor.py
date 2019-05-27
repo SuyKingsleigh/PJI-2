@@ -283,7 +283,7 @@ class Auditor:
         print("get_flag", coord)
         # if self.jogo.verifica_cacas(coord):
         if coord in self.jogo.lista_de_cacas:
-            user_input = input("\na caca eh valida, digite 'ok' para confirmar, qualquer outra coisa para nao validar\n")
+            user_input = input("\na caca eh valida, digite duas vezes 'ok' para confirmar, qualquer outra coisa para nao validar\n")
             if user_input == 'ok':
                 # Caca autorizada, envia status ok
                 print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
@@ -297,7 +297,7 @@ class Auditor:
                 self._update_flags() # envia mensagem com a lista de bandeiras atualizadas
                 print("sent")
         else:
-            user_input = input("\nah caca eh invalida, digite 'ok' para confirmar\n")
+            user_input = input("\nah caca eh invalida, digite  duas vezes 'ok' para confirmar\n")
             if user_input == 'ok':
                 print("falhou ao obter a bandeira")
                 ans = Message(cmd=Commands.STATUS_GET_FLAG,data=200)
