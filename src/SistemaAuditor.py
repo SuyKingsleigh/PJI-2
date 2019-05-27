@@ -273,23 +273,34 @@ class Auditor:
         self._router_socket.send_multipart([address, resp.serialize()])
 
     def _process_flag_request(self, msg):
+        validate = Thread(target=self._validate_flag_request, args=[msg])
+        validate.daemon = False
+        validate.start()
+
+    def _validate_flag_request(self, *args):
+        msg = args[0]
         coord = tuple(msg.data)
         print("get_flag", coord)
-        if self.jogo.verifica_cacas(coord):
-            self.jogo._jogadores_dict[msg.address].increase_score()
-            self._update_flags()
-            user_input = input("\na caca eh valida, digite 'ok' para confirmar\n")
+        # if self.jogo.verifica_cacas(coord):
+        if coord in self.jogo.lista_de_cacas:
+            user_input = input("\na caca eh valida, digite 'ok' para confirmar, qualquer outra coisa para nao validar\n")
             if user_input == 'ok':
+                # Caca autorizada, envia status ok
                 print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
                       " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
-                ans = Message(cmd=Commands.STATUS,data=200)
+                ans = Message(cmd=Commands.STATUS_GET_FLAG,data=200)
                 self._router_socket.send_multipart([msg.address, ans.serialize()])
+
+                # incrementa pontuacao
+                self.jogo._jogadores_dict[msg.address].increase_score()
+                self.jogo.verifica_cacas(coord) # atualiza a lista de bandeiras
+                self._update_flags() # envia mensagem com a lista de bandeiras atualizadas
                 print("sent")
         else:
             user_input = input("\nah caca eh invalida, digite 'ok' para confirmar\n")
             if user_input == 'ok':
                 print("falhou ao obter a bandeira")
-                ans = Message(cmd=Commands.STATUS,data=200)
+                ans = Message(cmd=Commands.STATUS_GET_FLAG,data=200)
                 self._router_socket.send_multipart([msg.address, ans.serialize()])
                 print("sent")
 
@@ -321,12 +332,12 @@ class Auditor:
 
     def _sorteia_posicao_inicial(self):
         # Sorteia e envia as posicoes iniciais
-        self.jogadores_pos = self.jogo._jogador_pos
-        for socket in self.jogadores_pos.keys():
-            msg = Message(cmd=Commands.POS, data=self.jogadores_pos[socket])
-            self._router_socket.send_multipart([socket, msg.serialize()])
-            print("Posicao inicial do jogador ", self.jogo._jogadores_dict[socket].id, " eh ",
-                  self.jogadores_pos[socket])
+        # self.jogadores_pos = self.jogo._jogador_pos
+        # for socket in self.jogadores_pos.keys():
+        #     msg = Message(cmd=Commands.POS, data=self.jogadores_pos[socket])
+        #     self._router_socket.send_multipart([socket, msg.serialize()])
+        #     print("Posicao inicial do jogador ", self.jogo._jogadores_dict[socket].id, " eh ",
+        #           self.jogadores_pos[socket])
         pass
 
     def stop_game(self):
