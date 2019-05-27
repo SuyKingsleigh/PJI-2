@@ -85,6 +85,7 @@ class Commands:
     QUIT = "q"
     GET_IP = "get_player_ip"
     STATUS = "status"
+    STATUS_GET_FLAG = "sgf"
     MASTER = "master"
     PORT_SA = 8888
     PORT_SS = 9999
