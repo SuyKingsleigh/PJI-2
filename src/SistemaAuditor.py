@@ -266,19 +266,21 @@ class Auditor:
     def _update_flags(self):
         # atualiza as cacas
         msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.jogo.lista_de_cacas)
+        print("NOVA LISTA DE BANDEIRAS", self.jogo.lista_de_cacas)
         self._publish_socket.send(msg.serialize())
 
     def _send_status(self, info, address):
         resp = Message(cmd=Commands.STATUS, data=info)
         self._router_socket.send_multipart([address, resp.serialize()])
 
-    def _process_flag_request(self, msg):
-        validate = Thread(target=self._validate_flag_request, args=[msg])
-        validate.daemon = False
-        validate.start()
+    # def _process_flag_request(self, msg):
+    #     # validate = Thread(target=self._validate_flag_request, args=[msg])
+    #     # validate.daemon = False
+    #     # validate.start()
+    #     self._validate_flag_request(msg)
 
-    def _validate_flag_request(self, *args):
-        msg = args[0]
+    def _process_flag_request(self, msg):
+        # msg = args[0]
         coord = tuple(msg.data)
         print("get_flag", coord)
         # if self.jogo.verifica_cacas(coord):
@@ -295,14 +297,14 @@ class Auditor:
                 self.jogo._jogadores_dict[msg.address].increase_score()
                 self.jogo.verifica_cacas(coord) # atualiza a lista de bandeiras
                 self._update_flags() # envia mensagem com a lista de bandeiras atualizadas
-                print("sent")
+                print("Validou")
         else:
             user_input = input("\nah caca eh invalida, digite  duas vezes 'ok' para confirmar\n")
             if user_input == 'ok':
                 print("falhou ao obter a bandeira")
                 ans = Message(cmd=Commands.STATUS_GET_FLAG,data=200)
                 self._router_socket.send_multipart([msg.address, ans.serialize()])
-                print("sent")
+                print("Nao Validou")
 
 
     def inicia_partida(self):
