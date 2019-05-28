@@ -95,7 +95,7 @@ class ComunicaComSA(Thread):
             self._process_broadcast_messages(rep)
 
     def _process_broadcast_messages(self, msg):
-        print("Comando: ", msg.cmd)
+        # print("Comando: ", msg.cmd)
         # Processa Mensagens vinads do socket subscribe
         if msg.cmd == Commands.START:
             # recebe a posicao inicial das cacas
@@ -106,7 +106,7 @@ class ComunicaComSA(Thread):
             # pos = self.dealer_socket.recv()
             # pos = Message(0, pos)
             # self.pos = pos.data
-            print("Posicao inicial: ", self.pos)
+            # print("Posicao inicial: ", self.pos)
             # self.supervisor.move(self.pos)
             # envia as bandeiras pro sistema do robo
             self.supervisor.send_bandeiras()
@@ -166,11 +166,10 @@ class ComunicaComSA(Thread):
         while self.blocked_state:
             resp = self.dealer_socket.recv()
             resp = Message(0, resp)
-            print("cmd=",resp.cmd ,"status: ", resp.data)
+            print("cmd=", resp.cmd, "status: ", resp.data)
             if resp.cmd == Commands.STATUS_GET_FLAG:
                 self._desbloqueado()
                 print("desbloqueou")
-
 
     def login(self):
         '''Metodo  para o Login no jogo, envia a ID do robo'''
@@ -314,28 +313,28 @@ class Supervisor(Thread):
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         self.comunica_com_sa.try_move(self.current_pos)
-        print("frente")
+        print("frente", self.current_pos)
 
     def manda_tras(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.TRAS)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         self.comunica_com_sa.try_move(self.current_pos)
-        print("tras")
+        print("tras", self.current_pos)
 
     def manda_direita(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.DIREITA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         self.comunica_com_sa.try_move(self.current_pos)
-        print("direita")
+        print("direita", self.current_pos)
 
     def manda_esquerda(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.ESQUERDA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         self.comunica_com_sa.try_move(self.current_pos)
-        print("esquerda")
+        print("esquerda", self.current_pos)
 
     def start_interface(self, manual):
         self.jogo = InterfaceDeJogo(self)
@@ -369,16 +368,19 @@ class InterfaceDeJogo(Thread):
                 self.supervisor.manda_frente()
             else:
                 print("esta no modo automatico")
+
         elif user_input == "d":
             if self.manual:
                 self.supervisor.manda_direita()
             else:
                 print("esta no modo automatico")
+
         elif user_input == "a":
             if self.manual:
                 self.supervisor.manda_esquerda()
             else:
                 print("esta no modo automatico")
+
         elif user_input == "s":
             if self.manual:
                 self.supervisor.manda_tras()
@@ -387,8 +389,7 @@ class InterfaceDeJogo(Thread):
         elif user_input == " ":
             print("gettin flag at", self.supervisor.current_pos)
             self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos)
-            # while not self.supervisor.comunica_com_sa.blocked_state: pass
-            # else: print("obteve a bandeira")
+
         elif user_input == "q":
             if self.manual: pass
         else:
