@@ -225,10 +225,10 @@ class Auditor:
         cmd=get_flag -> resposta:cmd=status ; data = 200 ou 400
         cmd=get_ip -> resposta: cmd=get_ip ; data= ip
         """
-        print("msg.cmd:  ", msg.cmd)
+        # print("msg.cmd:  ", msg.cmd)
         if msg.cmd == Commands.LOGIN:
             if self.jogo.registra_jogador(msg.address, msg.data):
-                print(msg.data)
+                # print(msg.data)
                 info = {'status': 200, 'info': 'logado'}
                 self._send_status(info, msg.address)
                 print("Login de ", msg.data, " efetuado com sucesso")
@@ -282,30 +282,29 @@ class Auditor:
     def _process_flag_request(self, msg):
         # msg = args[0]
         coord = tuple(msg.data)
-        print("get_flag", coord)
+        print("Solicitacao de validacao de bandeira em: ", coord)
         # if self.jogo.verifica_cacas(coord):
         if coord in self.jogo.lista_de_cacas:
-            user_input = input("\na caca eh valida, digite duas vezes 'ok' para confirmar, qualquer outra coisa para nao validar\n")
+            user_input = input(
+                "\na caca eh valida, digite duas vezes 'ok' para confirmar, qualquer outra coisa para nao validar\n")
             if user_input == 'ok':
                 # Caca autorizada, envia status ok
-                print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
-                      " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
-                ans = Message(cmd=Commands.STATUS_GET_FLAG,data=200)
+                ans = Message(cmd=Commands.STATUS_GET_FLAG, data=200)
                 self._router_socket.send_multipart([msg.address, ans.serialize()])
 
                 # incrementa pontuacao
                 self.jogo._jogadores_dict[msg.address].increase_score()
-                self.jogo.verifica_cacas(coord) # atualiza a lista de bandeiras
-                self._update_flags() # envia mensagem com a lista de bandeiras atualizadas
-                print("Validou")
+                self.jogo.verifica_cacas(coord)  # atualiza a lista de bandeiras
+                self._update_flags()  # envia mensagem com a lista de bandeiras atualizadas
+
+                print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
+                      " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
         else:
             user_input = input("\nah caca eh invalida, digite  duas vezes 'ok' para confirmar\n")
             if user_input == 'ok':
-                print("falhou ao obter a bandeira")
-                ans = Message(cmd=Commands.STATUS_GET_FLAG,data=200)
+                ans = Message(cmd=Commands.STATUS_GET_FLAG, data=400)
                 self._router_socket.send_multipart([msg.address, ans.serialize()])
-                print("Nao Validou")
-
+                print("falhou ao obter a bandeira")
 
     def inicia_partida(self):
         """Sorteia cacas do jogo, envia a lista das cacas para todos os robos
@@ -364,7 +363,7 @@ class Auditor:
             events = dict(self._poller.poll(timeout=None))  # dicionario = {SOCKET : EVENTO}
             for event in events:
                 address, req = self._router_socket.recv_multipart()
-                print(req)
+                # print(req)
                 msg = Message(address, req)
                 self._process_request(msg)
 
@@ -414,7 +413,6 @@ class InterfaceAuditora:
                 self.auditor.set_mode(Commands.AUTOMATICO)
             else:
                 pass
-        print("Fim")
 
 
 ########################################################################################################################
