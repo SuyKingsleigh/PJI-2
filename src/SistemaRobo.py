@@ -100,7 +100,8 @@ class Comunicador(Thread):
                 print("MODO AUTOMATICO")
             else:
                 print("MODO MANUAL ")
-            self.robo.manual = Commands.MODE
+            # self.robo.manual = Commands.MODE
+            self.robo.set_mode(Commands.MODE)
         else:
             pass
 
@@ -122,6 +123,7 @@ class Comunicador(Thread):
             print("indo para a esquerda")
         else:
             pass
+        msg = Message(cmd=Commands.MODE, data=mode)
 
     def try_move(self, coord):
         """tenta se mover
@@ -248,6 +250,38 @@ class Controlador:
     def join(self, timeout):
         self.running = False
         self.daemon.join(timeout=timeout)
+
+    def set_mode(self, mode):
+        self.manual = mode
+        self._socket.send(Message(cmd=Commands.MODE, data=mode).serialize())
+
+    def _handle(self, msg):
+        if msg.cmd == Mover.DIREITA:
+            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) + 1
+            self.comunicador.try_move((x,y))
+
+        elif msg.cmd == Mover.ESQUERDA:
+            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) - 1
+            self.comunicador.try_move((x, y)
+
+        elif msg.cmd == Mover.FRENTE:
+            x,y = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+            self.comunicador.try_move((x, y)
+
+        elif msg.cmd == Mover.TRAS:
+            x,y = int(self.current_pos[0]) -1 , int(self.current_pos[1])
+            self.comunicador.try_move((x, y)
+
+        else: time.sleep(0.3)
+
+    def _listen(self):
+        while True:
+            try:
+                msg = self._socket.recv(2048)
+                msg = Message(None, msg)
+                self._handle(msg)
+            except Exception as e:
+                pass
 
     def _run(self):
         if not self.running: self.running = True
