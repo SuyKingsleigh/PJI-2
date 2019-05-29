@@ -8,7 +8,7 @@ import socket
 from SistemaSupervisor import Supervisor
 from Public import Message, Commands
 
-from mover import *
+from mover import Mover
 
 HOST = 'localhost'
 
@@ -85,8 +85,8 @@ class Comunicador(Thread):
 
         elif msg.cmd == Commands.INITIAL_POS:
 
-            x, y= int(msg.data[0]), int(msg.data[1])
-            self.robo.current_pos = [x,y]
+            x, y = int(msg.data[0]), int(msg.data[1])
+            self.robo.current_pos = [x, y]
             print("current pos is ", self.robo.current_pos)
 
         elif msg.cmd == Commands.UPDATE_MAP:
@@ -101,7 +101,7 @@ class Comunicador(Thread):
             else:
                 print("MODO MANUAL ")
             # self.robo.manual = Commands.MODE
-            self.robo.set_mode(Commands.MODE)
+            self.robo.set_mode(msg.data)
         else:
             pass
 
@@ -131,14 +131,18 @@ class Comunicador(Thread):
          se autorizado recebe 200
          se nao 400.
          """
+        print("try move: ", coord)
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
-        if coord in self.robo.cacas:
+        if list(coord) in self.robo.cacas:
             msg = Message(cmd=Commands.GET_FLAG, data=coord)
             self.dealer_socket.send(msg.serialize())
 
         self.robo.current_pos = coord
-        self.robo.move(coord)
+        # self.robo.move(coord)
+
+    # def get_flag(self, msg):
+    #     self.dealer_socket.send(msg)
 
 
 ########################################################################################################################
@@ -152,12 +156,13 @@ class Controlador:
         self.running = False
         self.daemon = Thread()
         self.map = []
-        self.current_pos = -1,-1
+        self.current_pos = -1, -1
         self.manual = False
 
         self.ip_robo = ip_robo
-        self._socket = socket.socket() # socket.AF_INET, socket.SOCK_STREAM
+        self._socket = socket.socket()  # socket.AF_INET, socket.SOCK_STREAM
         self._socket.connect((self.ip_robo, 42069))
+        self._start_listen_thread()
 
     def close(self):
         self._socket.close()
@@ -257,24 +262,37 @@ class Controlador:
 
     def _handle(self, msg):
         if msg.cmd == Mover.DIREITA:
-            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) + 1
-            self.comunicador.try_move((x,y))
+            x, y = int(self.current_pos[0]), int(self.current_pos[1]) + 1
+            self.comunicador.try_move((x, y))
+            print("recebeu ", x, y)
+            self._socket.send("200".encode())
 
         elif msg.cmd == Mover.ESQUERDA:
-            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) - 1
-            self.comunicador.try_move((x, y)
+            x, y = int(self.current_pos[0]), int(self.current_pos[1]) - 1
+            self.comunicador.try_move((x, y))
+            print("recebeu ", x, y)
+            self._socket.send("200".encode())
 
         elif msg.cmd == Mover.FRENTE:
-            x,y = int(self.current_pos[0]) + 1, int(self.current_pos[1])
-            self.comunicador.try_move((x, y)
+            x, y = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+            self.comunicador.try_move((x, y))
+            print("recebeu ", x, y)
+            self._socket.send("200".encode())
 
         elif msg.cmd == Mover.TRAS:
-            x,y = int(self.current_pos[0]) -1 , int(self.current_pos[1])
-            self.comunicador.try_move((x, y)
+            x, y = int(self.current_pos[0]) - 1, int(self.current_pos[1])
+            self.comunicador.try_move((x, y))
+            print("recebeu ", x, y)
+            self._socket.send("200".encode())
 
-        else: time.sleep(0.3)
+        elif msg.cmd == Commands.GET_FLAG:
+            self.comunicador.get_flag(msg)
+        else:
+            # time.sleep(0.3)
+            pass
 
     def _listen(self):
+        print("esta ouvindo, ou deveria")
         while True:
             try:
                 msg = self._socket.recv(2048)
@@ -282,6 +300,10 @@ class Controlador:
                 self._handle(msg)
             except Exception as e:
                 pass
+
+    def _start_listen_thread(self):
+        self._listen_thread = Thread(target=self._listen, daemon=False)
+        self._listen_thread.start()
 
     def _run(self):
         if not self.running: self.running = True

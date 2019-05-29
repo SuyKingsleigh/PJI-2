@@ -72,27 +72,28 @@ class Robo(Thread):
         elif msg.cmd == Commands.UPDATE_MAP:
             print("mapa: ", msg.data)
             self.map = msg.data
-            global global_map
-            global_map = self.map
+            # global global_map
+            # global_map = self.map
 
 
         elif msg.cmd == Commands.UPDATE_FLAGS:
             print("bandeiras: ", msg.data)
             self.flags = msg.data
-            global global_flags
-            global_flags = self.flags
+            # global global_flags
+            # global_flags = self.flags
 
         elif msg.cmd == Commands.MODE:
             # automatico = False
+            self.manual = msg.data
+            print(msg.data)
             if not msg.data:
                 print("Modo automatico\n")
-                automatico = Automatico(self)
-                self.auto_thread = Thread(target=automatico.run)
-                self.auto_thread.daemon = False
+                self.auto_thread = Automatico(self)
                 self.auto_thread.start()
             else:
                 print("Modo manual\n")
-                if self.auto_thread.is_alive(): self.auto_thread.join(timeout=10)
+                if self.auto_thread:
+                    if self.auto_thread.is_alive(): self.auto_thread.join(timeout=10)
 
 
         else:
@@ -100,33 +101,48 @@ class Robo(Thread):
             # time.sleep(0.5)
 
     def frente(self):
-        self.motor.move(Mover.FRENTE)
+        try:
+            self.motor.move(Mover.FRENTE)
+        except Exception as e:
+            pass
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+        print(self.current_pos)
         if not self.manual:
             msg = Message(cmd=Mover.FRENTE)
             self.connection.send(msg.serialize())
 
     def tras(self):
-        self.motor.move(Mover.TRAS)
+        try:
+            self.motor.move(Mover.TRAS)
+        except Exception as e:
+            pass
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
+        print(self.current_pos)
         if not self.manual:
             msg = Message(cmd=Mover.TRAS)
             self.connection.send(msg.serialize())
 
     def esquerda(self):
-        self.motor.move(Mover.ESQUERDA)
+        try:
+            self.motor.move(Mover.ESQUERDA)
+        except Exception as e:
+            pass
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
+        print(self.current_pos)
         if not self.manual:
             msg = Message(cmd=Mover.ESQUERDA)
             self.connection.send(msg.serialize())
 
     def direita(self):
-        self.motor.move(Mover.DIREITA)
+        try:
+            self.motor.move(Mover.DIREITA)
+        except Exception as e:
+            pass
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
+        print(self.current_pos)
         if not self.manual:
             msg = Message(cmd=Mover.DIREITA)
             self.connection.send(msg.serialize())
-
 
 
     def _connect(self):
@@ -151,7 +167,7 @@ class Robo(Thread):
         self._handle()
 
 
-class Automatico:
+class Automatico(Thread):
     def __init__(self, robo):
         super().__init__()
         # self.current_pos = robo.coord_inicial
@@ -159,36 +175,59 @@ class Automatico:
         self.running = True
 
     def _calcula_coord(self, flag):
+        flag = tuple(flag)
+        # print("flag=", flag)
+        # print("current_pos=", self.robo.current_pos)
         while not self.robo.current_pos == flag:
-            if not flag in global_flags: break
-            robot_x, robot_y = int(self.robo.current_pos[0]), int(self.robo.current_pos[1])
-            robot_coord = robot_x, robot_y
-
+            # robot_x, robot_y = int(self.robo.current_pos[0]), int(self.robo.current_pos[1])
+            robot_x, robot_y = self.robo.current_pos[0], self.robo.current_pos[1]
             # se a bandeira estiver na frente (X) do robo
             # verifica se a prox coord esta ocupada
             # se estiver, passa, caso contrario, anda pra frente
-            if robot_x < int(flag[0]):
-                if (robot_x + 1, robot_y) in global_map:
+            # if robot_x < int(flag[0]):
+            if robot_x < flag[0]:
+                if (robot_x + 1, robot_y) in self.robo.map:
                     pass
-                else: self.robo.frente()
+                else:
+                    print("indo para frente, yeehaaaw")
+                    self.robo.frente()
+                    time.sleep(0.3)
 
-            if robot_x > int(flag[0]):
-                if (robot_x - 1, robot_y) in global_map:
+            # if robot_x > int(flag[0]):
+            if robot_x > flag[0]:
+                if (robot_x - 1, robot_y) in self.robo.map:
                     pass
-                else: self.robo.tras()
+                else:
+                    print("indo para tras, Pi, Pi, Pi, 3.14, Pi")
+                    self.robo.tras()
+                    time.sleep(0.3)
 
-            if robot_y < int(flag[1]):
-                if (robot_x, robot_y + 1) in global_map:
+            # if robot_y < int(flag[1]):
+            if robot_y < flag[1]:
+                if (robot_x, robot_y + 1) in self.robo.map:
                     pass
-                else: self.robo.direita()
+                else:
+                    print("TEM QUE IR PRA DIREITA, TAOK?")
+                    self.robo.direita()
+                    time.sleep(0.3)
 
-            if robot_x > int(flag[1]):
-                if (robot_x, robot_y - 1) in global_map:
+            # if robot_x > int(flag[1]):
+            if robot_x > flag[1]:
+                if (robot_x, robot_y - 1) in self.robo.map:
                     pass
-                else: self.robo.esquerda()
+                else:
+                    print("indo para a extrema esquerda bolchevique, gloria Stalin")
+                    self.robo.esquerda()
+                    time.sleep(0.3)
+
+            print("posicao atual do robo eh: ",self.robo.current_pos)
+            # self.robo.current_pos[0], self.robo.current_pos[1] = str(self.robo.current_pos[0]), str(self.robo.current_pos[1])
+
+        print("achou a bandeira")
 
     def run(self):
         for flag in self.robo.flags:
+            print("indo atras da bandeira", flag)
             self._calcula_coord(flag)
 
 
@@ -198,7 +237,7 @@ if __name__ == "__main__":
     port = 42069
     # print(sys.argv)
     # ip = sys.argv[1]
-    coord = sys.argv[1], sys.argv[2]
+    coord = int(sys.argv[1]), int(sys.argv[2])
     # coord = 0,0
     Robo("0.0.0.0", port, coord).run()
 

@@ -188,6 +188,7 @@ class ComunicaComSA(Thread):
         """informa ao supervisor que ta indo pra coord"""
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
+        print("try move: ", coord)
         # if self._read_rep() == 200:
         #     self.pos = coord
         #     print("Ma current pos is: ", self.pos)
