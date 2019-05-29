@@ -21,7 +21,7 @@ class Robo(Thread):
 
         self.map = []
         self.flags = []
-
+        # global flags
         try:
             self.motor = Robo((self.current_pos[0], self.current_pos[1]))
             print("motor connected")
@@ -33,34 +33,34 @@ class Robo(Thread):
         if msg.cmd == Mover.FRENTE:
             print("frente")
             try:
-                self.motor.move(Mover.FRENTE)
+                # self.motor.move(Mover.FRENTE)
+                self.frente()
             except Exception as e:
                 pass
-            self.connection.send("200".encode())
 
         elif msg.cmd == Mover.TRAS:
             print("tras")
             try:
-                self.motor.move(Mover.TRAS)
+                # self.motor.move(Mover.TRAS)
+                self.tras()
             except Exception as e:
                 pass
-            self.connection.send("200".encode())
 
         elif msg.cmd == Mover.DIREITA:
             print("direita")
             try:
-                self.motor.move(Mover.DIREITA)
+                # self.motor.move(Mover.DIREITA)
+                self.direita()
             except Exception as e:
                 pass
-            self.connection.send("200".encode())
 
         elif msg.cmd == Mover.ESQUERDA:
             print("esquerda")
             try:
-                self.motor.move(Mover.ESQUERDA)
+                # self.motor.move(Mover.ESQUERDA)
+                self.esquerda()
             except Exception as e:
                 pass
-            self.connection.send("200".encode())
 
         elif msg == Commands.QUIT:
             self.join()
@@ -72,38 +72,60 @@ class Robo(Thread):
         elif msg.cmd == Commands.UPDATE_MAP:
             print("mapa: ", msg.data)
             self.map = msg.data
+            global global_map
+            global_map = self.map
+
 
         elif msg.cmd == Commands.UPDATE_FLAGS:
             print("bandeiras: ", msg.data)
             self.flags = msg.data
+            global global_flags
+            global_flags = self.flags
+
+        elif msg.cmd == Commands.MODE:
+            # automatico = False
+            if not msg.data:
+                print("Modo automatico\n")
+                automatico = Automatico(self)
+                self.auto_thread = Thread(target=automatico.run)
+                self.auto_thread.daemon = False
+                self.auto_thread.start()
+            else:
+                print("Modo manual\n")
+                if self.auto_thread.is_alive(): self.auto_thread.join(timeout=10)
+
 
         else:
             pass
             # time.sleep(0.5)
 
-    def _frente(self):
+    def frente(self):
         self.motor.move(Mover.FRENTE)
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         if not self.manual:
             msg = Message(cmd=Mover.FRENTE)
-            #Todo enviar as mensagens pro robo
-    def _tras(self):
+            self.connection.send(msg.serialize())
+
+    def tras(self):
         self.motor.move(Mover.TRAS)
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         if not self.manual:
             msg = Message(cmd=Mover.TRAS)
+            self.connection.send(msg.serialize())
 
-    def _esquerda(self):
+    def esquerda(self):
         self.motor.move(Mover.ESQUERDA)
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         if not self.manual:
             msg = Message(cmd=Mover.ESQUERDA)
+            self.connection.send(msg.serialize())
 
-    def _direita(self):
+    def direita(self):
         self.motor.move(Mover.DIREITA)
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         if not self.manual:
             msg = Message(cmd=Mover.DIREITA)
+            self.connection.send(msg.serialize())
 
 
 
@@ -129,14 +151,46 @@ class Robo(Thread):
         self._handle()
 
 
-class Automatico(Thread):
-    def __init__(self, interface_robo):
+class Automatico:
+    def __init__(self, robo):
         super().__init__()
-        self.current_pos = interface_robo.coord_inicial
+        # self.current_pos = robo.coord_inicial
+        self.robo = robo
+        self.running = True
 
+    def _calcula_coord(self, flag):
+        while not self.robo.current_pos == flag:
+            if not flag in global_flags: break
+            robot_x, robot_y = int(self.robo.current_pos[0]), int(self.robo.current_pos[1])
+            robot_coord = robot_x, robot_y
 
-    def _move_frente(self):
-        pass
+            # se a bandeira estiver na frente (X) do robo
+            # verifica se a prox coord esta ocupada
+            # se estiver, passa, caso contrario, anda pra frente
+            if robot_x < int(flag[0]):
+                if (robot_x + 1, robot_y) in global_map:
+                    pass
+                else: self.robo.frente()
+
+            if robot_x > int(flag[0]):
+                if (robot_x - 1, robot_y) in global_map:
+                    pass
+                else: self.robo.tras()
+
+            if robot_y < int(flag[1]):
+                if (robot_x, robot_y + 1) in global_map:
+                    pass
+                else: self.robo.direita()
+
+            if robot_x > int(flag[1]):
+                if (robot_x, robot_y - 1) in global_map:
+                    pass
+                else: self.robo.esquerda()
+
+    def run(self):
+        for flag in self.robo.flags:
+            self._calcula_coord(flag)
+
 
 if __name__ == "__main__":
     """PARAMETROS PARA TESTE EM LOCALHOST 
