@@ -31,6 +31,7 @@ class Comunicador(Thread):
 
         self.cacas = []
         self.robo = Controlador(self, ip_robo)
+        self.blocked_state = False
 
     def connect(self, player_id):
         # cria um socket temporario, envia a solicitacao pro servidor
@@ -102,6 +103,9 @@ class Comunicador(Thread):
                 print("MODO MANUAL ")
             # self.robo.manual = Commands.MODE
             self.robo.set_mode(msg.data)
+        elif msg.cmd == Commands.STATUS_GET_FLAG:
+            print("Sistema desbloqueado")
+            self.robo.unblock_robot()
         else:
             pass
 
@@ -123,7 +127,7 @@ class Comunicador(Thread):
             print("indo para a esquerda")
         else:
             pass
-        msg = Message(cmd=Commands.MODE, data=mode)
+
 
     def try_move(self, coord):
         """tenta se mover
@@ -134,15 +138,15 @@ class Comunicador(Thread):
         print("try move: ", coord)
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
-        if list(coord) in self.robo.cacas:
-            msg = Message(cmd=Commands.GET_FLAG, data=coord)
-            self.dealer_socket.send(msg.serialize())
-
+        # if list(coord) in self.robo.cacas:
+        #     msg = Message(cmd=Commands.GET_FLAG, data=coord)
+        #     self.dealer_socket.send(msg.serialize())
         self.robo.current_pos = coord
         # self.robo.move(coord)
 
-    # def get_flag(self, msg):
-    #     self.dealer_socket.send(msg)
+    def get_flag(self, msg):
+        self.dealer_socket.send(msg)
+
 
 
 ########################################################################################################################
@@ -166,6 +170,9 @@ class Controlador:
 
     def close(self):
         self._socket.close()
+
+    def unblock_robot(self):
+        pass
 
     def _get_bandeiras(self):
         for bandeira in self.cacas:
@@ -236,13 +243,13 @@ class Controlador:
         print("posicao atual eh: ", self.current_pos)
         return self.current_pos[0], self.current_pos[1]
 
-    def move(self, coord):
-        if not coord in self.map:
-            print("Robo andando para: ", coord)
-            time.sleep(random.randint(1, 10))
-            print("chegou")
-        else:
-            print("posicao ja ocupada")
+    # def move(self, coord):
+    #     if not coord in self.map:
+    #         print("Robo andando para: ", coord)
+    #         time.sleep(random.randint(1, 10))
+    #         print("chegou")
+    #     else:
+    #         print("posicao ja ocupada")
 
     def start(self):
         self.daemon = Thread(target=self._run)
@@ -287,6 +294,7 @@ class Controlador:
 
         elif msg.cmd == Commands.GET_FLAG:
             self.comunicador.get_flag(msg)
+
         else:
             # time.sleep(0.3)
             pass

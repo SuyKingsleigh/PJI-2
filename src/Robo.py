@@ -5,6 +5,7 @@ from threading import Thread
 
 from Public import *
 from mover import Mover
+from manual import Manual
 
 
 class Robo(Thread):
@@ -21,9 +22,11 @@ class Robo(Thread):
 
         self.map = []
         self.flags = []
+        self.blocked = False
+        self.auto_thread = None
         # global flags
         try:
-            self.motor = Robo((self.current_pos[0], self.current_pos[1]))
+            self.motor = Manual((self.current_pos[0], self.current_pos[1]))
             print("motor connected")
         except Exception as e:
             print("failled to connect motor", e)
@@ -33,32 +36,32 @@ class Robo(Thread):
         if msg.cmd == Mover.FRENTE:
             print("frente")
             try:
-                # self.motor.move(Mover.FRENTE)
-                self.frente()
+                self.motor.move(Mover.FRENTE)
+                # self.frente()
             except Exception as e:
                 pass
 
         elif msg.cmd == Mover.TRAS:
             print("tras")
             try:
-                # self.motor.move(Mover.TRAS)
-                self.tras()
+                self.motor.move(Mover.TRAS)
+                # self.tras()
             except Exception as e:
                 pass
 
         elif msg.cmd == Mover.DIREITA:
             print("direita")
             try:
-                # self.motor.move(Mover.DIREITA)
-                self.direita()
+                self.motor.move(Mover.DIREITA)
+                # self.direita()
             except Exception as e:
                 pass
 
         elif msg.cmd == Mover.ESQUERDA:
             print("esquerda")
             try:
-                # self.motor.move(Mover.ESQUERDA)
-                self.esquerda()
+                self.motor.move(Mover.ESQUERDA)
+                # self.esquerda()
             except Exception as e:
                 pass
 
@@ -95,55 +98,64 @@ class Robo(Thread):
                 if self.auto_thread:
                     if self.auto_thread.is_alive(): self.auto_thread.join(timeout=10)
 
+        elif msg.cmd == Commands.STATUS_GET_FLAG:
+            self.blocked = False
 
         else:
             pass
             # time.sleep(0.5)
 
     def frente(self):
-        try:
-            self.motor.move(Mover.FRENTE)
-        except Exception as e:
-            pass
-        self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
-        print(self.current_pos)
-        if not self.manual:
-            msg = Message(cmd=Mover.FRENTE)
-            self.connection.send(msg.serialize())
+        if not self.blocked:
+            try:
+                self.motor.move(Mover.FRENTE)
+            except Exception as e:
+                pass
+            self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+            print(self.current_pos)
+            if not self.manual:
+                msg = Message(cmd=Mover.FRENTE)
+                self.connection.send(msg.serialize())
 
     def tras(self):
-        try:
-            self.motor.move(Mover.TRAS)
-        except Exception as e:
-            pass
-        self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
-        print(self.current_pos)
-        if not self.manual:
-            msg = Message(cmd=Mover.TRAS)
-            self.connection.send(msg.serialize())
+        if not self.blocked:
+            try:
+                self.motor.move(Mover.TRAS)
+            except Exception as e:
+                pass
+            self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
+            print(self.current_pos)
+            if not self.manual:
+                msg = Message(cmd=Mover.TRAS)
+                self.connection.send(msg.serialize())
 
     def esquerda(self):
-        try:
-            self.motor.move(Mover.ESQUERDA)
-        except Exception as e:
-            pass
-        self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
-        print(self.current_pos)
-        if not self.manual:
-            msg = Message(cmd=Mover.ESQUERDA)
-            self.connection.send(msg.serialize())
+        if not self.blocked:
+            try:
+                self.motor.move(Mover.ESQUERDA)
+            except Exception as e:
+                pass
+            self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
+            print(self.current_pos)
+            if not self.manual:
+                msg = Message(cmd=Mover.ESQUERDA)
+                self.connection.send(msg.serialize())
 
     def direita(self):
-        try:
-            self.motor.move(Mover.DIREITA)
-        except Exception as e:
-            pass
-        self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
-        print(self.current_pos)
-        if not self.manual:
-            msg = Message(cmd=Mover.DIREITA)
-            self.connection.send(msg.serialize())
+        if not self.blocked:
+            try:
+                self.motor.move(Mover.DIREITA)
+            except Exception as e:
+                pass
+            self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
+            print(self.current_pos)
+            if not self.manual:
+                msg = Message(cmd=Mover.DIREITA)
+                self.connection.send(msg.serialize())
 
+    def get_flag(self):
+        self.socket.send(Message(cmd=Commands.GET_FLAG, data=self.current_pos))
+        self.blocked = True
 
     def _connect(self):
         """Conecta o robo ao controlador"""
@@ -224,6 +236,7 @@ class Automatico(Thread):
             # self.robo.current_pos[0], self.robo.current_pos[1] = str(self.robo.current_pos[0]), str(self.robo.current_pos[1])
 
         print("achou a bandeira")
+        self.robo.get_flag()
 
     def run(self):
         for flag in self.robo.flags:

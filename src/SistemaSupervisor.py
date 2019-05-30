@@ -203,12 +203,15 @@ class ComunicaComSA(Thread):
     def _desbloqueado(self):
         self.blocked_state = False
 
-    def get_flag(self, coord):
+    def get_flag(self, coord, **kwargs):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
+        # if kwargs:
+        #     if kwargs["manual"] == True:
         self._bloqueado()
         self._wait_resp()
+
 
 
 ########################################################################################################################
@@ -248,9 +251,11 @@ class Supervisor(Thread):
 
     def _process_cmd(self, msg):
         address = msg.address
-        # recebe mensagem de obtem bandeira
+        # recebe do robo a mensagem de obtem bandeira
         if msg.cmd == Commands.GET_FLAG:
             self.comunica_com_sa.get_flag(msg.data)
+            while self.comunica_com_sa.blocked_state: pass
+            self.router_socket.send(Message(cmd=Commands.STATUS_GET_FLAG, data=200).serialize())
 
         # robo informa ao supervisor que quer ir para X,Y posicao
         elif msg.cmd == Commands.MOVE_TO:
