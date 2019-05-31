@@ -5,13 +5,13 @@ import time
 
 import zmq
 from threading import Thread
-from Public import Message, Commands
+from src.Public import Message, Commands
 
-from mover import *
+# from mover import *
 
 
 # import mover
-
+from src.mover import Mover
 
 class ComunicaComSA(Thread):
     """

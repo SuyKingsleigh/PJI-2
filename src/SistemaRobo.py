@@ -5,10 +5,12 @@ from threading import Thread
 import zmq
 import socket
 
-from SistemaSupervisor import Supervisor
-from Public import Message, Commands
+from src.SistemaSupervisor import Supervisor
+from src.Public import Message, Commands
 
-from mover import Mover
+from src.mover import *
+
+from src.mover import Mover
 
 HOST = 'localhost'
 
@@ -21,6 +23,7 @@ class Comunicador(Thread):
         CASO CONTRARIO NAO SERA POSSIVEL ESTABELECER UMA COMUNICCACAO
     """
     SLEEP_TIME = 3
+
     def __init__(self, port, SA_ip, ip_robo):
         super().__init__()
         self.port = port
@@ -84,8 +87,8 @@ class Comunicador(Thread):
 
         elif msg.cmd == Commands.INITIAL_POS:
 
-            x, y = int(msg.data[0]), int(msg.data[1])
-            self.robo.current_pos = [x, y]
+            x, y= int(msg.data[0]), int(msg.data[1])
+            self.robo.current_pos = [x,y]
             print("current pos is ", self.robo.current_pos)
 
         elif msg.cmd == Commands.UPDATE_MAP:
@@ -100,7 +103,7 @@ class Comunicador(Thread):
             else:
                 print("MODO MANUAL ")
             # self.robo.manual = Commands.MODE
-            self.robo.set_mode(msg.data)
+            self.robo.set_mode(Commands.MODE)
         else:
             pass
 
@@ -122,7 +125,6 @@ class Comunicador(Thread):
             print("indo para a esquerda")
         else:
             pass
-        msg = Message(cmd=Commands.MODE, data=mode)
 
     def try_move(self, coord):
         """tenta se mover
@@ -130,18 +132,14 @@ class Comunicador(Thread):
          se autorizado recebe 200
          se nao 400.
          """
-        print("try move: ", coord)
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
-        if list(coord) in self.robo.cacas:
+        if coord in self.robo.cacas:
             msg = Message(cmd=Commands.GET_FLAG, data=coord)
             self.dealer_socket.send(msg.serialize())
 
         self.robo.current_pos = coord
-        # self.robo.move(coord)
-
-    # def get_flag(self, msg):
-    #     self.dealer_socket.send(msg)
+        self.robo.move(coord)
 
 
 ########################################################################################################################
@@ -155,13 +153,12 @@ class Controlador:
         self.running = False
         self.daemon = Thread()
         self.map = []
-        self.current_pos = -1, -1
+        self.current_pos = -1,-1
         self.manual = False
 
         self.ip_robo = ip_robo
-        self._socket = socket.socket()  # socket.AF_INET, socket.SOCK_STREAM
+        self._socket = socket.socket() # socket.AF_INET, socket.SOCK_STREAM
         self._socket.connect((self.ip_robo, 42069))
-        self._start_listen_thread()
 
     def close(self):
         self._socket.close()
@@ -261,37 +258,24 @@ class Controlador:
 
     def _handle(self, msg):
         if msg.cmd == Mover.DIREITA:
-            x, y = int(self.current_pos[0]), int(self.current_pos[1]) + 1
-            self.comunicador.try_move((x, y))
-            print("recebeu ", x, y)
-            self._socket.send("200".encode())
+            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) + 1
+            self.comunicador.try_move((x,y))
 
         elif msg.cmd == Mover.ESQUERDA:
-            x, y = int(self.current_pos[0]), int(self.current_pos[1]) - 1
+            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) - 1
             self.comunicador.try_move((x, y))
-            print("recebeu ", x, y)
-            self._socket.send("200".encode())
 
         elif msg.cmd == Mover.FRENTE:
-            x, y = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+            x,y = int(self.current_pos[0]) + 1, int(self.current_pos[1])
             self.comunicador.try_move((x, y))
-            print("recebeu ", x, y)
-            self._socket.send("200".encode())
 
         elif msg.cmd == Mover.TRAS:
-            x, y = int(self.current_pos[0]) - 1, int(self.current_pos[1])
+            x,y = int(self.current_pos[0]) -1 , int(self.current_pos[1])
             self.comunicador.try_move((x, y))
-            print("recebeu ", x, y)
-            self._socket.send("200".encode())
 
-        elif msg.cmd == Commands.GET_FLAG:
-            self.comunicador.get_flag(msg)
-        else:
-            # time.sleep(0.3)
-            pass
+        else: time.sleep(0.3)
 
     def _listen(self):
-        print("esta ouvindo, ou deveria")
         while True:
             try:
                 msg = self._socket.recv(2048)
@@ -299,10 +283,6 @@ class Controlador:
                 self._handle(msg)
             except Exception as e:
                 pass
-
-    def _start_listen_thread(self):
-        self._listen_thread = Thread(target=self._listen, daemon=False)
-        self._listen_thread.start()
 
     def _run(self):
         if not self.running: self.running = True

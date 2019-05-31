@@ -3,8 +3,10 @@ import sys
 import time
 from threading import Thread
 
-from Public import *
-from mover import Mover
+from src.Public import Message, Commands
+from src.mover import Mover
+
+from src.manual import Manual
 
 
 class Robo(Thread):
@@ -23,7 +25,7 @@ class Robo(Thread):
         self.flags = []
         # global flags
         try:
-            self.motor = Robo((self.current_pos[0], self.current_pos[1]))
+            self.motor = Manual((self.current_pos[0], self.current_pos[1]))
             print("motor connected")
         except Exception as e:
             print("failled to connect motor", e)
