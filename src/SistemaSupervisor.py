@@ -13,6 +13,8 @@ from mover import *
 # import mover
 
 
+global blocked
+
 class ComunicaComSA(Thread):
     """
         Esta classe efetua a comunicacao entre o Sistema Supervisor e o Sistema Auditor
@@ -71,7 +73,8 @@ class ComunicaComSA(Thread):
         # em alguns casos eh necessario ter acesso a camada inferior (supervisor)
         self.supervisor = None
         self.name = "comunicacomsa"
-
+        self.blocked = False
+        blocked = False
     def set_supervisor(self, supervisor):
         self.supervisor = supervisor
 
@@ -147,6 +150,7 @@ class ComunicaComSA(Thread):
             # self.thread_run_flag = False
             self.supervisor.stop()
             print("FIM DA PARTIDA ")
+
         else:
             pass
 
@@ -187,6 +191,17 @@ class ComunicaComSA(Thread):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
+        self.blocked = True
+        # blocked = True
+        print("esta bloqueado", self.blocked)
+        while True:
+            resp = self.dealer_socket.recv()
+            resp = Message(0, resp)
+            if resp.cmd == Commands.STATUS_GET_FLAG: break
+
+        self.blocked = False
+        # blocked = False
+        print("desbloqueou :3")
 
 
 ########################################################################################################################
@@ -320,6 +335,9 @@ class Supervisor(Thread):
         msg = Message(cmd=Commands.MODE, data=mode)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
 
+    def is_blocked(self):
+        return self.comunica_com_sa.blocked
+
 
 ########################################################################################################################
 class InterfaceDeJogo(Thread):
@@ -339,33 +357,35 @@ class InterfaceDeJogo(Thread):
         user_input = 'hue'
         user_input = input(">>>  ")
         if user_input == "w":
-            if self.manual:
+            if self.manual and not self.supervisor.is_blocked():
                 self.supervisor.manda_frente()
             else:
-                print("esta no modo automatico")
+                print("esta no modo automatico ou bloqueado")
+
         elif user_input == "d":
-            if self.manual:
+            if self.manual and not self.supervisor.is_blocked():
                 self.supervisor.manda_direita()
             else:
-                print("esta no modo automatico")
+                print("esta no modo automatico ou bloqueado")
+
         elif user_input == "a":
-            if self.manual:
+            if self.manual and not self.supervisor.is_blocked():
                 self.supervisor.manda_esquerda()
             else:
-                print("esta no modo automatico")
+                print("esta no modo automatico ou bloqueado")
+
         elif user_input == "s":
-            if self.manual:
+            if self.manual and not self.supervisor.is_blocked():
                 self.supervisor.manda_tras()
             else:
-                print("esta no modo automatico")
+                print("esta no modo automatico ou bloqueado")
+
         elif user_input == " ":
             print("gettin flag at", self.supervisor.current_pos)
             self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos)
+
         elif user_input == "q":
             if self.manual: pass
-        elif user_input == " ":
-            # todo get flag
-            pass
         else:
             pass
 

@@ -21,7 +21,6 @@ class Comunicador(Thread):
         CASO CONTRARIO NAO SERA POSSIVEL ESTABELECER UMA COMUNICCACAO
     """
     SLEEP_TIME = 3
-
     def __init__(self, port, SA_ip, ip_robo):
         super().__init__()
         self.port = port
@@ -84,8 +83,8 @@ class Comunicador(Thread):
 
         elif msg.cmd == Commands.INITIAL_POS:
 
-            x, y= int(msg.data[0]), int(msg.data[1])
-            self.robo.current_pos = [x,y]
+            x, y = int(msg.data[0]), int(msg.data[1])
+            self.robo.current_pos = [x, y]
             print("current pos is ", self.robo.current_pos)
 
         elif msg.cmd == Commands.UPDATE_MAP:
@@ -149,7 +148,7 @@ class Controlador:
         self.running = False
         self.daemon = Thread()
         self.map = []
-        self.current_pos = -1,-1
+        self.current_pos = -1, -1
         self.manual = False
 
         self.ip_robo = ip_robo

@@ -6,6 +6,8 @@ from Public import Message, Commands
 import time
 import zmq, random
 
+global user_input
+
 
 ########################################################################################################################
 
@@ -68,7 +70,7 @@ class Jogo:
 
         self.lista_de_cacas = []  # lista das cacas
         self._jogador_pos = dict()  # dicionario da posicao de cada jogador {socket : (coordX, coordY) }
-        self._jogadores_dict = dict()
+        self.jogadores_dict = dict()
 
     def set_game_mode(self, mode):
         self.manual = mode
@@ -91,15 +93,15 @@ class Jogo:
         ip = kwargs[Commands.IP]
         pos = kwargs[Commands.INITIAL_POS]
         print("Registra_jogador, id = ", id, " ip= ", ip, "pos= ", pos)
-        for player in self._jogadores_dict.values():
+        for player in self.jogadores_dict.values():
             if id == player.id:
                 return False
         else:
-            self._jogadores_dict[socket] = Jogador(socket=socket, id=id, ip=ip, pos=pos)
+            self.jogadores_dict[socket] = Jogador(socket=socket, id=id, ip=ip, pos=pos)
             self._jogador_pos[socket] = pos
             return True
 
-    def verifica_cacas(self, cacas):
+    def remove_bandeira(self, cacas):
         """Retorna true e remove da lista de cacas quando a caca eh valida, false caso contrario
          """
         if cacas in self.lista_de_cacas:
@@ -130,9 +132,9 @@ class Jogo:
         if coord > (0, 0):
             if coord not in self._jogador_pos.values():
                 self._jogador_pos[socket_jogador] = coord
-                self._jogadores_dict[socket_jogador].set_pos(coord)
-                print("Jogador: ", self._jogadores_dict[socket_jogador].id, " esta indo para ",
-                      self._jogadores_dict[socket_jogador].pos)
+                self.jogadores_dict[socket_jogador].set_pos(coord)
+                print("Jogador: ", self.jogadores_dict[socket_jogador].id, " esta indo para ",
+                      self.jogadores_dict[socket_jogador].pos)
                 return True
 
         return False
@@ -142,7 +144,7 @@ class Jogo:
             Zera o placar dos jogadores.
         """
         player_score_dict = dict()
-        for jogador in self._jogadores_dict.values():
+        for jogador in self.jogadores_dict.values():
             player_score_dict[jogador.id] = jogador.score
             jogador.score = 0
 
@@ -151,14 +153,14 @@ class Jogo:
     def get_player_ip(self, id):
         """Retorna a pontuacao do jogador
         ID = nome do jogador"""
-        for player in self._jogadores_dict.values():
+        for player in self.jogadores_dict.values():
             if player.id == id:
                 return player.ip
 
     def update_map(self):
         """Retorna uma lista de posicao, com a posicao de cada jogador, ou seja, apenas as coord ocupadas"""
         pos_list = []
-        for jogador in self._jogadores_dict.values(): pos_list.append(jogador.pos)
+        for jogador in self.jogadores_dict.values(): pos_list.append(jogador.pos)
         return pos_list
 
 
@@ -244,15 +246,7 @@ class Auditor:
         # valida ou nao uma caca, caso seja validada, envia a todos a nova lista de cacas
         # atualiza placar tb
         elif msg.cmd == Commands.GET_FLAG:
-            coord = tuple(msg.data)
-            print("get_flag", coord)
-            if self.jogo.verifica_cacas(coord):
-                self.jogo._jogadores_dict[msg.address].increase_score()
-                self._update_flags()
-                print("O jogador", self.jogo._jogadores_dict[msg.address].id, "obteve a caca em ", coord,
-                      " sua pontuacao eh ", self.jogo._jogadores_dict[msg.address].score)
-            else:
-                print("falhou ")
+            self._process_flag(msg)
 
         elif msg.cmd == Commands.GET_IP:
             ip = self.jogo.get_player_ip(msg.data)
@@ -260,6 +254,28 @@ class Auditor:
             self._router_socket.send_multipart([msg.address, rep.serialize()])
         else:
             pass
+
+    def _process_flag(self, msg):
+        coord = tuple(msg.data)
+        print("get_flag", coord)
+        status = 400
+
+        if coord in self.jogo.lista_de_cacas:
+            print("a caca eh valida, digite ok pra continuar ")
+            while user_input != 'ok': pass # n faz nada ate o cabra digitar ok
+            self.jogo.jogadores_dict[msg.address].increase_score()
+            self.jogo.remove_bandeira(coord)
+            self._update_flags()
+            print("O jogador", self.jogo.jogadores_dict[msg.address].id, "obteve a caca em ", coord,
+                  " sua pontuacao eh ", self.jogo.jogadores_dict[msg.address].score)
+            status = 200
+        else:
+            print("caca invalida, digite ok pra continuar")
+            while user_input != 'ok': pass
+
+        self._router_socket.send_multipart(
+            [msg.address, Message(cmd=Commands.STATUS_GET_FLAG, data=status).serialize()])
+        print("status de valida caca enviado")
 
     def _update_map(self):
         msg = Message(cmd=Commands.UPDATE_MAP, data=self.jogo.update_map())
@@ -281,7 +297,7 @@ class Auditor:
            """
         # self.set_mode(Commands.MANUAL)
         self._sorteia_cacas()
-        self._sorteia_posicao_inicial()
+        # self._sorteia_posicao_inicial()
         self.jogo_started = True  # seta a flag de started pra true
 
     def set_mode(self, mode):
@@ -299,15 +315,15 @@ class Auditor:
         print("Bandeiras: ", self.cacas)
         self._publish_socket.send(msg.serialize())
 
-    def _sorteia_posicao_inicial(self):
-        # Sorteia e envia as posicoes iniciais
-        self.jogadores_pos = self.jogo._jogador_pos
-        for socket in self.jogadores_pos.keys():
-            msg = Message(cmd=Commands.POS, data=self.jogadores_pos[socket])
-            self._router_socket.send_multipart([socket, msg.serialize()])
-            print("Posicao inicial do jogador ", self.jogo._jogadores_dict[socket].id, " eh ",
-                  self.jogadores_pos[socket])
-        pass
+    # def _sorteia_posicao_inicial(self):
+    #     # Sorteia e envia as posicoes iniciais
+    #     self.jogadores_pos = self.jogo._jogador_pos
+    #     for socket in self.jogadores_pos.keys():
+    #         msg = Message(cmd=Commands.POS, data=self.jogadores_pos[socket])
+    #         self._router_socket.send_multipart([socket, msg.serialize()])
+    #         print("Posicao inicial do jogador ", self.jogo.jogadores_dict[socket].id, " eh ",
+    #               self.jogadores_pos[socket])
+    #     pass
 
     def stop_game(self):
         """Termina a partida, imprime o placar, informa aos supervisores o fim da mesma """
@@ -363,6 +379,7 @@ class InterfaceAuditora:
         stop = termina partida, informa placar, resta placar e prepara-se para uma proxima
         q = finaliza partida (feito pra testes)
         """
+        global user_input
         user_input = ' '
         while not user_input == Commands.QUIT:
             user_input = input("> ")

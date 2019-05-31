@@ -66,7 +66,8 @@ class Robo(Thread):
             self.join()
             self.socket.close()
 
-        elif not msg: time.sleep(1)
+        elif not msg:
+            time.sleep(1)
 
         else:
             pass
