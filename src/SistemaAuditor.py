@@ -1,10 +1,11 @@
 import socket
 import sys
-from datetime import time
-from threading import Thread
-from Public import Message, Commands
 import time
-import zmq, random
+from threading import Thread, Condition
+
+import random
+import zmq
+from src.Public import Message, Commands
 
 global user_input
 
@@ -108,23 +109,6 @@ class Jogo:
             return True
         return False
 
-    # def inicia_partida(self):
-    #     """
-    #     Sorteia as posicoes inicias de cada Robo
-    #     Retorna um dicionario: {socket : (coord_inicial_X, coord_inicial_Y) }
-    #     """
-    #     self.jogador_pos = dict()
-    #     for socket in self.jogadores_dict.keys():
-    #         # Fica sorteando valores, se o valor NAO estiver em jogador_pos nem em lista_de_cacas, adiciona e vai pro proximo jogador
-    #         while True:
-    #             x, y = random.randint(0, self.dimensao - 1), random.randint(0, self.dimensao - 1)
-    #             if (x, y) not in (self.jogador_pos.values() and self.lista_de_cacas):
-    #                 self.jogador_pos[socket] = (x, y)
-    #                 self.jogadores_dict[socket].set_pos((x, y))
-    #                 break
-    #
-    #     return self.jogador_pos
-
     def move_jogador(self, socket_jogador, coord):
         """Atualiza a posicao do jogador"""
         coord = tuple(coord)
@@ -200,6 +184,7 @@ class Auditor:
         self.jogo_started = False
         self.thread_run_flag = True
 
+        self._blocked = True
         # imprime o ip do servidor para facilitar a vida
         print("O ip do servidor eh ", self._get_my_ip(), "\n")
 
@@ -250,13 +235,14 @@ class Auditor:
             pass
 
     def _process_flag(self, msg):
+        self._blocked = True
         coord = tuple(msg.data)
         print("get_flag", coord)
         status = 400
 
         if coord in self.jogo.lista_de_cacas:
             print("a caca eh valida, digite ok pra continuar ")
-            while user_input != 'ok': pass # n faz nada ate o cabra digitar ok
+            while user_input != 'ok': pass  # n faz nada ate o cabra digitar ok
             self.jogo.jogadores_dict[msg.address].increase_score()
             self.jogo.remove_bandeira(coord)
             self._update_flags()
@@ -270,6 +256,13 @@ class Auditor:
         self._router_socket.send_multipart(
             [msg.address, Message(cmd=Commands.STATUS_GET_FLAG, data=status).serialize()])
         print("status de valida caca enviado")
+        self._blocked = False
+
+    def is_blocked(self):
+        return self._blocked
+
+
+
 
     def _update_map(self):
         msg = Message(cmd=Commands.UPDATE_MAP, data=self.jogo.update_map())
@@ -291,7 +284,6 @@ class Auditor:
            """
         # self.set_mode(Commands.MANUAL)
         self._sorteia_cacas()
-        # self._sorteia_posicao_inicial()
         self.jogo_started = True  # seta a flag de started pra true
 
     def set_mode(self, mode):
@@ -308,16 +300,6 @@ class Auditor:
         msg = Message(cmd=Commands.START, data=self.cacas)
         print("Bandeiras: ", self.cacas)
         self._publish_socket.send(msg.serialize())
-
-    # def _sorteia_posicao_inicial(self):
-    #     # Sorteia e envia as posicoes iniciais
-    #     self.jogadores_pos = self.jogo._jogador_pos
-    #     for socket in self.jogadores_pos.keys():
-    #         msg = Message(cmd=Commands.POS, data=self.jogadores_pos[socket])
-    #         self._router_socket.send_multipart([socket, msg.serialize()])
-    #         print("Posicao inicial do jogador ", self.jogo.jogadores_dict[socket].id, " eh ",
-    #               self.jogadores_pos[socket])
-    #     pass
 
     def stop_game(self):
         """Termina a partida, imprime o placar, informa aos supervisores o fim da mesma """
@@ -390,8 +372,12 @@ class InterfaceAuditora:
                 self.auditor.set_mode(Commands.MANUAL)
             elif user_input == "automatico":
                 self.auditor.set_mode(Commands.AUTOMATICO)
+            elif user_input == "ok":
+                while self.auditor.is_blocked(): pass
+                user_input = "kandughojaknjf"
             else:
                 pass
+
         print("Fim")
 
 

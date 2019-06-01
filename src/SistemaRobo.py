@@ -1,15 +1,11 @@
 import random
-import sys
-import time
-from threading import Thread
-import zmq
 import socket
 
-from src.SistemaSupervisor import Supervisor
+import zmq
+
 from src.Public import Message, Commands
-
+from src.SistemaSupervisor import Supervisor
 from src.mover import *
-
 from src.mover import Mover
 
 HOST = 'localhost'
@@ -87,8 +83,8 @@ class Comunicador(Thread):
 
         elif msg.cmd == Commands.INITIAL_POS:
 
-            x, y= int(msg.data[0]), int(msg.data[1])
-            self.robo.current_pos = [x,y]
+            x, y = int(msg.data[0]), int(msg.data[1])
+            self.robo.current_pos = [x, y]
             print("current pos is ", self.robo.current_pos)
 
         elif msg.cmd == Commands.UPDATE_MAP:
@@ -98,12 +94,15 @@ class Comunicador(Thread):
             self._process_move(msg.data)
 
         elif msg.cmd == Commands.MODE:
-            if msg.data == False:
-                print("MODO AUTOMATICO")
-            else:
+            if msg.data:
                 print("MODO MANUAL ")
+            else:
+                print("MODO AUTOMATICO")
             # self.robo.manual = Commands.MODE
-            self.robo.set_mode(Commands.MODE)
+            self.robo.set_mode(msg.data)
+
+        elif msg.cmd == Commands.STATUS_GET_FLAG:
+            self.robo.unblock_robot()
         else:
             pass
 
@@ -125,6 +124,10 @@ class Comunicador(Thread):
             print("indo para a esquerda")
         else:
             pass
+
+    def get_flag(self, msg):
+        print("Comunicador esta a enviar um getflag ", "cmd=", msg.cmd, " data=", msg.data)
+        self.dealer_socket.send(msg.serialize())
 
     def try_move(self, coord):
         """tenta se mover
@@ -153,11 +156,11 @@ class Controlador:
         self.running = False
         self.daemon = Thread()
         self.map = []
-        self.current_pos = -1,-1
+        self.current_pos = -1, -1
         self.manual = False
 
         self.ip_robo = ip_robo
-        self._socket = socket.socket() # socket.AF_INET, socket.SOCK_STREAM
+        self._socket = socket.socket()  # socket.AF_INET, socket.SOCK_STREAM
         self._socket.connect((self.ip_robo, 42069))
 
     def close(self):
@@ -242,11 +245,17 @@ class Controlador:
 
     def start(self):
         self.daemon = Thread(target=self._run)
+        self.listend = Thread(target=self._listen)
+        self.listend.daemon = True
         self.daemon.daemon = True
         self.daemon.start()
+        self.listend.start()
 
     def is_alive(self):
         return self.daemon.is_alive()
+
+    def unblock_robot(self):
+        self._socket.send(Message(cmd=Commands.STATUS_GET_FLAG).serialize())
 
     def join(self, timeout):
         self.running = False
@@ -258,22 +267,29 @@ class Controlador:
 
     def _handle(self, msg):
         if msg.cmd == Mover.DIREITA:
-            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) + 1
-            self.comunicador.try_move((x,y))
+            x, y = int(self.current_pos[0]), int(self.current_pos[1]) + 1
+            self.comunicador.try_move((x, y))
 
         elif msg.cmd == Mover.ESQUERDA:
-            x,y = int(self.current_pos[0]) , int(self.current_pos[1]) - 1
+            x, y = int(self.current_pos[0]), int(self.current_pos[1]) - 1
             self.comunicador.try_move((x, y))
 
         elif msg.cmd == Mover.FRENTE:
-            x,y = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+            x, y = int(self.current_pos[0]) + 1, int(self.current_pos[1])
             self.comunicador.try_move((x, y))
 
         elif msg.cmd == Mover.TRAS:
-            x,y = int(self.current_pos[0]) -1 , int(self.current_pos[1])
+            x, y = int(self.current_pos[0]) - 1, int(self.current_pos[1])
             self.comunicador.try_move((x, y))
 
-        else: time.sleep(0.3)
+        elif msg.cmd == Commands.GET_FLAG:
+            self.comunicador.get_flag(msg)
+            print("Controlador recebeu um get flag ", msg.data, "\n")
+
+        else:
+            time.sleep(0.3)
+
+        print("\ncurrent pos is:  ", self.current_pos)
 
     def _listen(self):
         while True:

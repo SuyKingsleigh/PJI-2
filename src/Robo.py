@@ -4,9 +4,8 @@ import time
 from threading import Thread
 
 from src.Public import Message, Commands
-from src.mover import Mover
-
 from src.manual import Manual
+from src.mover import Mover
 
 
 class Robo(Thread):
@@ -23,6 +22,8 @@ class Robo(Thread):
 
         self.map = []
         self.flags = []
+        self._blocked = False
+        self.auto_thread = None
         # global flags
         try:
             self.motor = Manual((self.current_pos[0], self.current_pos[1]))
@@ -97,6 +98,8 @@ class Robo(Thread):
                 if self.auto_thread:
                     if self.auto_thread.is_alive(): self.auto_thread.join(timeout=10)
 
+        elif msg.cmd == Commands.STATUS_GET_FLAG:
+            self._blocked = False
 
         else:
             pass
@@ -146,7 +149,6 @@ class Robo(Thread):
             msg = Message(cmd=Mover.DIREITA)
             self.connection.send(msg.serialize())
 
-
     def _connect(self):
         """Conecta o robo ao controlador"""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -168,6 +170,13 @@ class Robo(Thread):
         self._connect()
         self._handle()
 
+    def is_blocked(self):
+        return self._blocked
+
+    def get_flag(self, coord):
+        self.connection.send(Message(cmd=Commands.GET_FLAG, data=coord).serialize())
+        self._blocked = True
+
 
 class Automatico(Thread):
     def __init__(self, robo):
@@ -178,54 +187,52 @@ class Automatico(Thread):
 
     def _calcula_coord(self, flag):
         flag = tuple(flag)
-        # print("flag=", flag)
-        # print("current_pos=", self.robo.current_pos)
+        print("flag=", flag)
+        print("current_pos=", self.robo.current_pos)
+
+        # enquanto estiver bloequado fica nessa porra de loop
+        while self.robo.is_blocked(): pass
+
+        # quando desbloqueia vem pra esse
         while not self.robo.current_pos == flag:
-            # robot_x, robot_y = int(self.robo.current_pos[0]), int(self.robo.current_pos[1])
+            # robot_x, robot_y = int(self.robo.current_pos[0]), int(self.robo.current_pos[
+            #1])
             robot_x, robot_y = self.robo.current_pos[0], self.robo.current_pos[1]
             # se a bandeira estiver na frente (X) do robo
             # verifica se a prox coord esta ocupada
             # se estiver, passa, caso contrario, anda pra frente
             # if robot_x < int(flag[0]):
             if robot_x < flag[0]:
-                if (robot_x + 1, robot_y) in self.robo.map:
-                    pass
-                else:
+                if (robot_x + 1, robot_y) not in self.robo.map:
                     print("indo para frente, yeehaaaw")
                     self.robo.frente()
                     time.sleep(0.3)
 
             # if robot_x > int(flag[0]):
             if robot_x > flag[0]:
-                if (robot_x - 1, robot_y) in self.robo.map:
-                    pass
-                else:
+                if (robot_x - 1, robot_y) not in self.robo.map:
                     print("indo para tras, Pi, Pi, Pi, 3.14, Pi")
                     self.robo.tras()
                     time.sleep(0.3)
 
             # if robot_y < int(flag[1]):
             if robot_y < flag[1]:
-                if (robot_x, robot_y + 1) in self.robo.map:
-                    pass
-                else:
-                    print("TEM QUE IR PRA DIREITA, TAOK?")
+                if (robot_x, robot_y + 1) not in self.robo.map:
                     self.robo.direita()
                     time.sleep(0.3)
+                    print("direita\n")
 
             # if robot_x > int(flag[1]):
             if robot_x > flag[1]:
-                if (robot_x, robot_y - 1) in self.robo.map:
-                    pass
-                else:
-                    print("indo para a extrema esquerda bolchevique, gloria Stalin")
+                if (robot_x, robot_y - 1) not in self.robo.map:
+                    print("esquerda\n")
                     self.robo.esquerda()
                     time.sleep(0.3)
 
-            print("posicao atual do robo eh: ",self.robo.current_pos)
-            # self.robo.current_pos[0], self.robo.current_pos[1] = str(self.robo.current_pos[0]), str(self.robo.current_pos[1])
+            print("posicao atual do robo eh: ", self.robo.current_pos)
 
         print("achou a bandeira")
+        self.robo.get_flag(self.robo.current_pos)
 
     def run(self):
         for flag in self.robo.flags:

@@ -1,19 +1,18 @@
 import os
 import signal
-import socket, sys
-import time
+import socket
+import sys
+from threading import Thread
 
 import zmq
-from threading import Thread
 from Public import Message, Commands
-
 from mover import *
-
 
 # import mover
 
 
 global blocked
+
 
 class ComunicaComSA(Thread):
     """
@@ -72,6 +71,7 @@ class ComunicaComSA(Thread):
         self.name = "comunicacomsa"
         self.blocked = False
         blocked = False
+
     def set_supervisor(self, supervisor):
         self.supervisor = supervisor
 
@@ -99,13 +99,7 @@ class ComunicaComSA(Thread):
             # recebe a posicao inicial das cacas
             self.cacas = msg.data
             print("Lista de cacas: ", self.cacas)
-
-            # recebe a posicao inicial
-            # pos = self.dealer_socket.recv()
-            # pos = Message(0, pos)
-            # self.pos = pos.data
             print("Posicao inicial: ", self.pos)
-            # self.supervisor.move(self.pos)
             # envia as bandeiras pro sistema do robo
             self.supervisor.send_bandeiras()
             self.supervisor.start_robot()
@@ -241,6 +235,9 @@ class Supervisor(Thread):
         # recebe mensagem de obtem bandeira
         if msg.cmd == Commands.GET_FLAG:
             self.comunica_com_sa.get_flag(msg.data)
+            while self.is_blocked(): pass
+            # o robo n precisa saber o status, so o supervisor
+            self.router_socket.send_multipart([self.robot_address, Message(cmd=Commands.STATUS_GET_FLAG).serialize()])
 
         # robo informa ao supervisor que quer ir para X,Y posicao
         elif msg.cmd == Commands.MOVE_TO:
@@ -304,24 +301,28 @@ class Supervisor(Thread):
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         print("frente")
+        print("\n", self.current_pos)
 
     def manda_tras(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.TRAS)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         print("tras")
+        print("\n", self.current_pos)
 
     def manda_direita(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.DIREITA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         print("direita")
+        print("\n", self.current_pos)
 
     def manda_esquerda(self):
         msg = Message(cmd=Commands.DIRECTION, data=Mover.ESQUERDA)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         print("esquerda")
+        print("\n", self.current_pos)
 
     def start_interface(self, manual):
         self.jogo = InterfaceDeJogo(self)
