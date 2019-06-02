@@ -79,7 +79,7 @@ class Comunicador(Thread):
             if not self.robo.is_alive():
                 self.robo.start()  # caso a thread nao tenha sido iniciada, inicia-a
         elif msg.cmd == Commands.STOP:
-            self.robo.join(100)
+            # self.robo.join(100)
             print("STOP")
 
         elif msg.cmd == Commands.INITIAL_POS:
@@ -251,6 +251,9 @@ class Controlador:
         self.daemon.daemon = True
         self.daemon.start()
         self.listend.start()
+
+    def send_stop(self):
+        self._socket.send(Message(cmd=Commands.STOP).serialize())
 
     def is_alive(self):
         return self.daemon.is_alive()

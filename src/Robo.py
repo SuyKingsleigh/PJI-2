@@ -17,6 +17,7 @@ class Robo(Thread):
         # self.socket = socket.socket()
         self.port = port
         self.ip = ip
+        self.begin_pos = coord_inicial
         self.current_pos = coord_inicial
         self.manual = True
 
@@ -64,6 +65,9 @@ class Robo(Thread):
                 self.esquerda()
             except Exception as e:
                 pass
+
+        elif msg == Commands.STOP:
+            self.current_pos = self.begin_pos
 
         elif msg == Commands.QUIT:
             self.join()
@@ -198,41 +202,39 @@ class Automatico(Thread):
             # robot_x, robot_y = int(self.robo.current_pos[0]), int(self.robo.current_pos[
             #1])
             robot_x, robot_y = self.robo.current_pos[0], self.robo.current_pos[1]
+            old_coord = robot_x, robot_y
             # se a bandeira estiver na frente (X) do robo
             # verifica se a prox coord esta ocupada
             # se estiver, passa, caso contrario, anda pra frente
-            # if robot_x < int(flag[0]):
             if robot_x < flag[0]:
                 if (robot_x + 1, robot_y) not in self.robo.map:
                     print("indo para frente, yeehaaaw")
                     self.robo.frente()
                     time.sleep(0.3)
-                    if self.robo.current_pos == flag: break
+                    # if self.robo.current_pos == flag: break
 
-            # if robot_x > int(flag[0]):
             if robot_x > flag[0]:
                 if (robot_x - 1, robot_y) not in self.robo.map:
                     print("indo para tras, Pi, Pi, Pi, 3.14, Pi")
                     self.robo.tras()
                     time.sleep(0.3)
-                    if self.robo.current_pos == flag: break
+                    # if self.robo.current_pos == flag: break
 
-            # if robot_y < int(flag[1]):
             if robot_y < flag[1]:
                 if (robot_x, robot_y + 1) not in self.robo.map:
                     self.robo.direita()
                     time.sleep(0.3)
                     print("direita\n")
-                    if self.robo.current_pos == flag: break
+                    # if self.robo.current_pos == flag: break
 
-            # if robot_x > int(flag[1]):
             if robot_x > flag[1]:
                 if (robot_x, robot_y - 1) not in self.robo.map:
                     print("esquerda\n")
                     self.robo.esquerda()
                     time.sleep(0.3)
-                    if self.robo.current_pos == flag: break
+                    # if self.robo.current_pos == flag: break
 
+            if old_coord == self.robo.current_pos: break # previnir entrar nuns loop doidao
             print("posicao atual do robo eh: ", self.robo.current_pos)
 
 
