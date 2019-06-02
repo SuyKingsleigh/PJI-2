@@ -206,40 +206,36 @@ class Automatico(Thread):
             # se a bandeira estiver na frente (X) do robo
             # verifica se a prox coord esta ocupada
             # se estiver, passa, caso contrario, anda pra frente
-            if robot_x < flag[0]:
+            if robot_x < flag[0] and self.robo.current_pos != flag:
                 if (robot_x + 1, robot_y) not in self.robo.map:
                     print("indo para frente, yeehaaaw")
                     self.robo.frente()
                     time.sleep(0.3)
-                    # if self.robo.current_pos == flag: break
 
-            if robot_x > flag[0]:
+            if robot_x > flag[0] and self.robo.current_pos != flag:
                 if (robot_x - 1, robot_y) not in self.robo.map:
                     print("indo para tras, Pi, Pi, Pi, 3.14, Pi")
                     self.robo.tras()
                     time.sleep(0.3)
-                    # if self.robo.current_pos == flag: break
 
-            if robot_y < flag[1]:
+            if robot_y < flag[1] and self.robo.current_pos != flag:
                 if (robot_x, robot_y + 1) not in self.robo.map:
                     self.robo.direita()
                     time.sleep(0.3)
                     print("direita\n")
-                    # if self.robo.current_pos == flag: break
 
-            if robot_x > flag[1]:
+            if robot_x > flag[1] and self.robo.current_pos != flag:
                 if (robot_x, robot_y - 1) not in self.robo.map:
                     print("esquerda\n")
                     self.robo.esquerda()
                     time.sleep(0.3)
-                    # if self.robo.current_pos == flag: break
 
             if old_coord == self.robo.current_pos: break # previnir entrar nuns loop doidao
             print("posicao atual do robo eh: ", self.robo.current_pos)
 
 
         print("achou a bandeira")
-        self.robo.get_flag(self.robo.current_pos)
+        if(self.robo.current_pos == flag): self.robo.get_flag(self.robo.current_pos)
 
     def run(self):
         for flag in self.robo.flags:

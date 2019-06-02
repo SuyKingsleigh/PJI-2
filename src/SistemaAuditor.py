@@ -271,6 +271,8 @@ class Auditor:
         # atualiza as cacas
         msg = Message(cmd=Commands.UPDATE_FLAGS, data=self.jogo.lista_de_cacas)
         self._publish_socket.send(msg.serialize())
+        if self.jogo.lista_de_cacas: print("Bandeiras ", self.jogo.lista_de_cacas)
+        else: print("\n\n\n FIM DE JOGO \n\n\n")
 
     def _send_status(self, info, address):
         resp = Message(cmd=Commands.STATUS, data=info)
