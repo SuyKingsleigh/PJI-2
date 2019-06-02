@@ -1,5 +1,6 @@
 import random
 import socket
+import threading
 
 import zmq
 
@@ -327,3 +328,6 @@ if __name__ == "__main__":
         c = Comunicador(Commands.PORT_SA, ip, ip_robo)
         c.connect(name)
         c.start()
+
+    print(threading.active_count())
+

@@ -1,7 +1,6 @@
 import socket
 import sys
-import time
-from threading import Thread, Condition
+from threading import Thread
 
 import random
 import zmq
@@ -385,3 +384,4 @@ class InterfaceAuditora:
 if __name__ == "__main__":
     joguineo = InterfaceAuditora(Commands.PORT_SA)
     joguineo.run()
+

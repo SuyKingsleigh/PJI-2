@@ -2,16 +2,12 @@ import os
 import signal
 import socket
 import sys
-from threading import Thread
+from threading import *
 
 import zmq
-from Public import Message, Commands
-from mover import *
 
-# import mover
-
-
-global blocked
+from src.Public import Message, Commands
+from src.mover import Mover
 
 
 class ComunicaComSA(Thread):
@@ -70,7 +66,6 @@ class ComunicaComSA(Thread):
         self.supervisor = None
         self.name = "comunicacomsa"
         self.blocked = False
-        blocked = False
 
     def set_supervisor(self, supervisor):
         self.supervisor = supervisor
@@ -137,8 +132,6 @@ class ComunicaComSA(Thread):
 
 
         elif msg.cmd == Commands.STOP:
-            # self.started = False
-            # self.thread_run_flag = False
             self.supervisor.stop()
             print("FIM DA PARTIDA ")
 
@@ -170,30 +163,23 @@ class ComunicaComSA(Thread):
         """informa ao supervisor que ta indo pra coord"""
         req = Message(cmd=Commands.MOVE_TO, data=coord)
         self.dealer_socket.send(req.serialize())
-        # if self._read_rep() == 200:
-        #     self.pos = coord
-        #     print("Ma current pos is: ", self.pos)
-        #     return True
-        #
-        # print("Ma current pos is: ", self.pos)
-        # return False
 
     def get_flag(self, coord):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
-        self.blocked = True
-        # blocked = True
-        print("esta bloqueado", self.blocked)
+
+        Thread(target=self._wait_flag_status, daemon=False).start()
+
+    def _wait_flag_status(self):
+        self.supervisor.jogo.block()
         while True:
             resp = self.dealer_socket.recv()
             resp = Message(0, resp)
-            if resp.cmd == Commands.STATUS_GET_FLAG: break
+            if resp.cmd == Commands.STATUS_GET_FLAG:
+                break
 
-        self.blocked = False
-        # blocked = False
-        print("desbloqueou :3")
-
+        self.supervisor.jogo.unblock()
 
 ########################################################################################################################
 
@@ -333,17 +319,16 @@ class Supervisor(Thread):
         msg = Message(cmd=Commands.MODE, data=mode)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
 
-    def is_blocked(self):
-        return self.comunica_com_sa.blocked
-
 
 ########################################################################################################################
+
 class InterfaceDeJogo(Thread):
     def __init__(self, supervisor):
         super().__init__()
         self.supervisor = supervisor
         self.manual = self.supervisor.mode
         self.name = "interfacedejogo"
+        self.blocked = False
 
     def set_auto(self):
         self.manual = False
@@ -351,34 +336,35 @@ class InterfaceDeJogo(Thread):
     def set_manual(self):
         self.manual = True
 
+
+
     def _manual_input(self):
-        user_input = 'hue'
-        user_input = input(">>>  ")
-        if user_input == "w":
-            if self.manual and not self.supervisor.is_blocked():
+        user_input = input(">>> \n")
+        if user_input == "w" and not self.blocked:
+            if self.manual:
                 self.supervisor.manda_frente()
             else:
                 print("esta no modo automatico ou bloqueado")
 
-        elif user_input == "d":
-            if self.manual and not self.supervisor.is_blocked():
+        elif user_input == "d" and not self.blocked:
+            if self.manual:
                 self.supervisor.manda_direita()
             else:
                 print("esta no modo automatico ou bloqueado")
 
-        elif user_input == "a":
-            if self.manual and not self.supervisor.is_blocked():
+        elif user_input == "a" and not self.blocked:
+            if self.manual:
                 self.supervisor.manda_esquerda()
             else:
                 print("esta no modo automatico ou bloqueado")
 
-        elif user_input == "s":
-            if self.manual and not self.supervisor.is_blocked():
+        elif user_input == "s" and not self.blocked:
+            if self.manual:
                 self.supervisor.manda_tras()
             else:
                 print("esta no modo automatico ou bloqueado")
 
-        elif user_input == " ":
+        elif user_input == " " and not self.blocked:
             print("gettin flag at", self.supervisor.current_pos)
             self.supervisor.comunica_com_sa.get_flag(self.supervisor.current_pos)
 
@@ -386,6 +372,17 @@ class InterfaceDeJogo(Thread):
             if self.manual: pass
         else:
             pass
+
+
+    def block(self):
+        self.blocked = True
+        print("[INTERFACE DE JOGO] BlOQUEADA")
+
+
+    def unblock(self):
+        self.blocked = False
+        print("[INTERFACE DE JOGO] DESBLOQUEADA")
+
 
     def run(self):
         print("\n\nInterface de jogo\n\n")
@@ -397,6 +394,7 @@ class InterfaceDeJogo(Thread):
 if __name__ == '__main__':
     """PARAMETROS PARA TESTE EM LOCALHOST
     localhost jamal 0 0"""
+
     ip = sys.argv[1]
     name = sys.argv[2]
     initial_pos = sys.argv[3], sys.argv[4]
@@ -408,4 +406,4 @@ if __name__ == '__main__':
     comsa.set_supervisor(supervisor)
     supervisor.start()
 
-    while not supervisor.robot_address: pass
+    # while not supervisor.robot_address: pass
