@@ -292,6 +292,7 @@ class Auditor:
         msg = Message(cmd=Commands.MODE, data=mode)
         self._publish_socket.send(msg.serialize())
         if mode: print("modo manual")
+        else: print("modo automatico")
 
     def _sorteia_cacas(self):
         # Sorteia e envia as bandeiras

@@ -207,6 +207,7 @@ class Automatico(Thread):
                     print("indo para frente, yeehaaaw")
                     self.robo.frente()
                     time.sleep(0.3)
+                    if self.robo.current_pos == flag: break
 
             # if robot_x > int(flag[0]):
             if robot_x > flag[0]:
@@ -214,6 +215,7 @@ class Automatico(Thread):
                     print("indo para tras, Pi, Pi, Pi, 3.14, Pi")
                     self.robo.tras()
                     time.sleep(0.3)
+                    if self.robo.current_pos == flag: break
 
             # if robot_y < int(flag[1]):
             if robot_y < flag[1]:
@@ -221,6 +223,7 @@ class Automatico(Thread):
                     self.robo.direita()
                     time.sleep(0.3)
                     print("direita\n")
+                    if self.robo.current_pos == flag: break
 
             # if robot_x > int(flag[1]):
             if robot_x > flag[1]:
@@ -228,8 +231,10 @@ class Automatico(Thread):
                     print("esquerda\n")
                     self.robo.esquerda()
                     time.sleep(0.3)
+                    if self.robo.current_pos == flag: break
 
             print("posicao atual do robo eh: ", self.robo.current_pos)
+
 
         print("achou a bandeira")
         self.robo.get_flag(self.robo.current_pos)

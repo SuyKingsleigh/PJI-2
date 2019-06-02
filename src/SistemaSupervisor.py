@@ -116,7 +116,7 @@ class ComunicaComSA(Thread):
 
         elif msg.cmd == Commands.MODE:
             self.supervisor.mode = msg.data
-            self.supervisor.set_mode(self.supervisor.mode)
+            self.supervisor.set_mode(msg.data)
             if self.supervisor.mode:
                 print("modo manual")
                 if self.supervisor.jogo.is_alive():
@@ -168,17 +168,22 @@ class ComunicaComSA(Thread):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
-
-        Thread(target=self._wait_flag_status, daemon=False).start()
+        if self.supervisor.jogo.manual: Thread(target=self._wait_flag_status, daemon=False).start()
+        else: self._wait_flag_status()
 
     def _wait_flag_status(self):
+
+        ## bloqueia tanto interface de jogo quanto supervisor
         self.supervisor.jogo.block()
+        self.supervisor.block()
+
         while True:
             resp = self.dealer_socket.recv()
             resp = Message(0, resp)
             if resp.cmd == Commands.STATUS_GET_FLAG:
                 break
-
+        # desbloqueia ambos
+        self.supervisor.unblock()
         self.supervisor.jogo.unblock()
 
 ########################################################################################################################
@@ -211,10 +216,21 @@ class Supervisor(Thread):
 
         self.jogo = InterfaceDeJogo(self)
         self.name = "supervisor"
+        self.blocked = False
 
     def send_updated_map(self, map):
         msg = Message(cmd=Commands.UPDATE_MAP, data=map)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+
+    def block(self):
+        self.blocked = True
+
+    def unblock(self):
+        self.blocked = False
+
+    def is_blocked(self):
+        return self.blocked
+
 
     def _process_cmd(self, msg):
         address = msg.address
