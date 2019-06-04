@@ -1,13 +1,12 @@
 import random
 import socket
-import threading
+import sys
+from threading import Thread
 
 import zmq
-
-from src.Public import Message, Commands
-from src.SistemaSupervisor import Supervisor
-from src.mover import *
-from src.mover import Mover
+from Public import Message, Commands
+from SistemaSupervisor import Supervisor
+from mover import Mover
 
 HOST = 'localhost'
 
@@ -194,10 +193,11 @@ class Controlador:
         try:  # envia uma mensagem para o robo para se mover
             self._socket.send(Message(cmd=Mover.FRENTE).serialize())
         except Exception as e:
-            pass
+            print("falhou ao mover", e)
 
         # fica bloqeuado ate receber a resposta do robo
-        while not self._socket.recv(256): pass
+        if not self.manual:
+            while not self._socket.recv(256): pass
         print("posicao atual eh: ", self.current_pos)
 
         return self.current_pos[0], self.current_pos[1]
@@ -209,7 +209,8 @@ class Controlador:
             self._socket.send(Message(cmd=Mover.TRAS).serialize())
         except Exception as e:
             pass
-        while not self._socket.recv(256): pass
+        if not self.manual:
+            while not self._socket.recv(256): pass
         print("posicao atual eh: ", self.current_pos)
         return self.current_pos[0], self.current_pos[1]
 
@@ -220,7 +221,9 @@ class Controlador:
             self._socket.send(Message(cmd=Mover.DIREITA).serialize())
         except Exception as e:
             pass
-        while not self._socket.recv(256): pass
+        if not self.manual:
+            while not self._socket.recv(256): pass
+
         print("posicao atual eh: ", self.current_pos)
         return self.current_pos[0], self.current_pos[1]
 
@@ -232,7 +235,8 @@ class Controlador:
             self._socket.send(Message(cmd=Mover.ESQUERDA).serialize())
         except Exception as e:
             pass
-        while not self._socket.recv(256): pass
+        if not self.manual:
+            while not self._socket.recv(256): pass
         print("posicao atual eh: ", self.current_pos)
         return self.current_pos[0], self.current_pos[1]
 
@@ -306,7 +310,6 @@ class Controlador:
 
     def _run(self):
         if not self.running: self.running = True
-        # if not self.manual: self._get_bandeiras()
 
 
 ########################################################################################################################
@@ -331,6 +334,3 @@ if __name__ == "__main__":
         c = Comunicador(Commands.PORT_SA, ip, ip_robo)
         c.connect(name)
         c.start()
-
-    print(threading.active_count())
-

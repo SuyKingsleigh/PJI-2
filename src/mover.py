@@ -1,7 +1,7 @@
-from ev3dev.ev3 import *
+from threading import Thread
 from time import time, sleep
-from threading import Thread, Lock
-from copy import deepcopy
+
+from ev3dev.ev3 import *
 from shared import *
 
 
@@ -41,8 +41,8 @@ class Mover(Thread):
     CONTINUA = 11
 
     def __init__(self, x, y):
-        self.motor_direita = Motor(OUTPUT_C)
-        self.motor_esquerda = Motor(OUTPUT_B)
+        self.motor_direita = Motor(OUTPUT_C)  # OUTPUT_C
+        self.motor_esquerda = Motor(OUTPUT_B)  # OUTPUT_B
         self.sensor_us = UltrasonicSensor()
         self.sensor_luminosidade = ColorSensor()
 

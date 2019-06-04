@@ -1,10 +1,11 @@
 # from mover_test import *
-from mover import *
-from interface import *
-from threading import Thread, Lock
+from threading import Thread
 from time import sleep
-from shared import *
+
+from interface import *
 from mensagens_robo import *
+from mover import *
+from shared import *
 
 
 class Manual(Thread):
@@ -115,4 +116,3 @@ class Manual(Thread):
 			sleep(1)
 
 		print("[MANUAL]: Fim do jogo")
-

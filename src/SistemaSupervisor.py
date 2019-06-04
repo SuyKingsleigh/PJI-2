@@ -5,9 +5,8 @@ import sys
 from threading import *
 
 import zmq
-
-from src.Public import Message, Commands
-from src.mover import Mover
+from Public import Message, Commands
+from mover import Mover
 
 
 class ComunicaComSA(Thread):
@@ -121,8 +120,11 @@ class ComunicaComSA(Thread):
                 print("modo manual")
                 if self.supervisor.jogo.is_alive():
                     # se a thread estiver executando, para e reinicia
-                    self.supervisor.jogo.join()
-                    self.supervisor.start_interface(msg.data)
+                    try:
+                        self.supervisor.jogo.join()
+                        self.supervisor.start_interface(msg.data)
+                    except Exception as e:
+                        print("falhou ao reiniciar a thread do manual", e)
                 else:
                     self.supervisor.start_interface(msg.data)
 
@@ -168,8 +170,10 @@ class ComunicaComSA(Thread):
         """ Envia mensagem que obteve uma bandeira """
         req = Message(cmd=Commands.GET_FLAG, data=coord)
         self.dealer_socket.send(req.serialize())
-        if self.supervisor.jogo.manual: Thread(target=self._wait_flag_status, daemon=False).start()
-        else: self._wait_flag_status()
+        if self.supervisor.jogo.manual:
+            Thread(target=self._wait_flag_status, daemon=False).start()
+        else:
+            self._wait_flag_status()
 
     def _wait_flag_status(self):
 
@@ -185,6 +189,7 @@ class ComunicaComSA(Thread):
         # desbloqueia ambos
         self.supervisor.unblock()
         self.supervisor.jogo.unblock()
+
 
 ########################################################################################################################
 
@@ -230,7 +235,6 @@ class Supervisor(Thread):
 
     def is_blocked(self):
         return self.blocked
-
 
     def _process_cmd(self, msg):
         address = msg.address
@@ -352,8 +356,6 @@ class InterfaceDeJogo(Thread):
     def set_manual(self):
         self.manual = True
 
-
-
     def _manual_input(self):
         user_input = input(">>> \n")
         if user_input == "w" and not self.blocked:
@@ -389,16 +391,13 @@ class InterfaceDeJogo(Thread):
         else:
             pass
 
-
     def block(self):
         self.blocked = True
         print("[INTERFACE DE JOGO] BlOQUEADA")
 
-
     def unblock(self):
         self.blocked = False
         print("[INTERFACE DE JOGO] DESBLOQUEADA")
-
 
     def run(self):
         print("\n\nInterface de jogo\n\n")
@@ -422,4 +421,4 @@ if __name__ == '__main__':
     comsa.set_supervisor(supervisor)
     supervisor.start()
 
-    # while not supervisor.robot_address: pass
+    while not supervisor.robot_address: pass

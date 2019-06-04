@@ -1,10 +1,10 @@
+import random
 import socket
 import sys
 from threading import Thread
 
-import random
 import zmq
-from src.Public import Message, Commands
+from Public import Message, Commands
 
 global user_input
 
@@ -224,7 +224,8 @@ class Auditor:
         # valida ou nao uma caca, caso seja validada, envia a todos a nova lista de cacas
         # atualiza placar tb
         elif msg.cmd == Commands.GET_FLAG:
-            self._process_flag(msg)
+            # self._process_flag(msg)
+            self._process_flag_thread(msg)
 
         elif msg.cmd == Commands.GET_IP:
             ip = self.jogo.get_player_ip(msg.data)
@@ -232,6 +233,10 @@ class Auditor:
             self._router_socket.send_multipart([msg.address, rep.serialize()])
         else:
             pass
+
+    def _process_flag_thread(self, msg):
+        print("iniciou a thread pra processar bandeira\n")
+        Thread(target=self._process_flag, args=[msg], daemon=False).start()
 
     def _process_flag(self, msg):
         self._blocked = True
@@ -259,8 +264,6 @@ class Auditor:
 
     def is_blocked(self):
         return self._blocked
-
-
 
 
     def _update_map(self):

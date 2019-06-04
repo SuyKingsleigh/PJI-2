@@ -3,9 +3,9 @@ import sys
 import time
 from threading import Thread
 
-from src.Public import Message, Commands
-from src.manual import Manual
-from src.mover import Mover
+from Public import Message, Commands
+from manual import Manual
+from mover import Mover
 
 
 class Robo(Thread):
