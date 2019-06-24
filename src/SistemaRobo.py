@@ -189,7 +189,7 @@ class Controlador:
 
     def frente(self):
         # anda pra frente e incrementa 1 em X
-        self.current_pos[0], self.current_pos[1] = int(self.current_pos[0]) + 1, int(self.current_pos[1])
+        self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         try:  # envia uma mensagem para o robo para se mover
             self._socket.send(Message(cmd=Mover.FRENTE).serialize())
         except Exception as e:
@@ -204,7 +204,7 @@ class Controlador:
 
     def tras(self):
         # anda pra tras e decrementa 1 em X
-        self.current_pos[0], self.current_pos[1] = int(self.current_pos[0]) - 1, int(self.current_pos[1])
+        self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         try:
             self._socket.send(Message(cmd=Mover.TRAS).serialize())
         except Exception as e:
@@ -216,7 +216,7 @@ class Controlador:
 
     def direita(self):
         # anda pra direita e incrementa 1 em Y
-        self.current_pos[0], self.current_pos[1] = int(self.current_pos[0]), int(self.current_pos[1]) + 1
+        self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         try:
             self._socket.send(Message(cmd=Mover.DIREITA).serialize())
         except Exception as e:
@@ -229,7 +229,7 @@ class Controlador:
 
     def esquerda(self):
         # anda pra esquerda e decrementa 1 em Y
-        self.current_pos[0], self.current_pos[1] = int(self.current_pos[0]), int(self.current_pos[1]) - 1
+        self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         try:
 
             self._socket.send(Message(cmd=Mover.ESQUERDA).serialize())

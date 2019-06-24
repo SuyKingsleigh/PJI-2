@@ -8,6 +8,8 @@ from Public import Message, Commands
 
 global user_input
 
+global def_flags 
+global debug 
 
 ########################################################################################################################
 
@@ -56,8 +58,8 @@ class Jogo:
         atributo "manual": true se o jogo for manual, false se for automatico, vem por default true
     """
 
-    DIMENSAO = 6  # dimensao do mapa, no NxN
-    NUMERO_DE_CACAS = 3  # numero de cacas no mapa
+    DIMENSAO = 4  # dimensao do mapa, no NxN
+    NUMERO_DE_CACAS = 2  # numero de cacas no mapa
 
     # jogadores_dict: Dict[zmq.Socket, Jogador]
 
@@ -65,7 +67,7 @@ class Jogo:
         # Supondo que o mapa e numero de cacas sejam estaticos.
         self.dimensao = Jogo.DIMENSAO
         self.numero_de_cacas = Jogo.NUMERO_DE_CACAS
-        self.manual = True  # Modo de jogo, true se manual, false se automatico
+        self.manual = -1
 
         self.lista_de_cacas = []  # lista das cacas
         self._jogador_pos = dict()  # dicionario da posicao de cada jogador {socket : (coordX, coordY) }
@@ -301,7 +303,11 @@ class Auditor:
 
     def _sorteia_cacas(self):
         # Sorteia e envia as bandeiras
-        self.cacas = self.jogo.sorteia_cacas()
+        if debug: 
+            self.cacas = def_flags
+            print("Modo de debug")
+        else:
+            self.cacas = self.jogo.sorteia_cacas()
         msg = Message(cmd=Commands.START, data=self.cacas)
         print("Bandeiras: ", self.cacas)
         self._publish_socket.send(msg.serialize())
@@ -316,7 +322,8 @@ class Auditor:
             print("o jogador ", player, " obteve ", placar[player])
 
         self.jogo_started = False
-
+        self.jogo.manual = -1
+        
     def stop_thread(self):
         """Termina a thread responsavel por lidar com requisicoes dos supervisores"""
         self.thread_run_flag = False
@@ -365,7 +372,10 @@ class InterfaceAuditora:
         while not user_input == Commands.QUIT:
             user_input = input("> ")
             if user_input == Commands.START:
-                self.auditor.inicia_partida()
+                if self.auditor.jogo.manual is -1:
+                    print("Precisa definir o modo de jogo antes!")
+                else:
+                    self.auditor.inicia_partida()
             elif user_input == Commands.QUIT:
                 self.auditor.stop_game()
                 self.auditor.stop_thread()
@@ -388,6 +398,8 @@ class InterfaceAuditora:
 
 ########################################################################################################################
 if __name__ == "__main__":
+    debug = sys.argv[1]
+    def_flags = [(1,1), (2,2)]
     joguineo = InterfaceAuditora(Commands.PORT_SA)
     joguineo.run()
 
