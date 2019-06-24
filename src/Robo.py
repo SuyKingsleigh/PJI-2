@@ -249,13 +249,14 @@ class Automatico(Thread):
         if(self.robo.current_pos == flag): self.robo.get_flag(self.robo.current_pos)
 
     def run(self):
+        while not self.robo.flags: pass
         for flag in self.robo.flags:
             print("indo atras da bandeira", flag)
             self._calcula_coord(flag)
 
 
 if __name__ == "__main__":
-    print("versao 24.14.40")
+    print("versao 24.14.42")
     """PARAMETROS PARA TESTE EM LOCALHOST 
     localhost 0 0"""
     port = 42069
