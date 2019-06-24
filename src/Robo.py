@@ -195,7 +195,7 @@ class Automatico(Thread):
     SLEEP_TIME = 1.5
     def __init__(self, robo):
         super().__init__()
-        self.current_pos = robo.coord_inicial
+        self.current_pos = robo.begin_pos
         self.robo = robo
         self.running = True
 
@@ -256,7 +256,7 @@ class Automatico(Thread):
 
 
 if __name__ == "__main__":
-    print("versao 24.14.42")
+    print("versao 24.14.43")
     """PARAMETROS PARA TESTE EM LOCALHOST 
     localhost 0 0"""
     port = 42069
