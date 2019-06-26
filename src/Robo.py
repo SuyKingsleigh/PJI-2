@@ -63,9 +63,13 @@ class Robo(Thread):
                 pass
 
         elif msg == Commands.STOP:
+            print("STOP")
             self.current_pos = self.begin_pos
             self.flags = []
-            print("FIM DE JOGO")
+            if self.auto_thread:
+                if self.auto_thread.is_alive(): 
+                    self.auto_thread.join(timeout=10)
+                    self.auto_thread = None
 
         elif msg == Commands.QUIT:
             self.join()
@@ -98,7 +102,9 @@ class Robo(Thread):
             else:
                 print("Modo manual\n")
                 if self.auto_thread:
-                    if self.auto_thread.is_alive(): self.auto_thread.join(timeout=10)
+                    if self.auto_thread.is_alive(): 
+                        self.auto_thread.join(timeout=10)
+                        self.auto_thread = None
 
         elif msg.cmd == Commands.STATUS_GET_FLAG:
             self._blocked = False
