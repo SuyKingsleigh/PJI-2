@@ -78,6 +78,9 @@ class Comunicador(Thread):
             if not self.robo.is_alive():
                 self.robo.start()  # caso a thread nao tenha sido iniciada, inicia-a
         elif msg.cmd == Commands.STOP:
+            self.cacas = []
+            self.robo.send_stop()
+            self.robo.running = False
             # self.robo.join(100)
             print("STOP")
 
@@ -295,7 +298,7 @@ class Controlador:
             print("Controlador recebeu um get flag ", msg.data, "\n")
 
         else:
-            time.sleep(0.3)
+            time.sleep(1.5)
 
         print("\ncurrent pos is:  ", self.current_pos)
 

@@ -69,6 +69,7 @@ class Robo(Thread):
         elif msg == Commands.STOP:
             self.current_pos = self.begin_pos
             self.flags = []
+            print("FIM DE JOGO")
 
         elif msg == Commands.QUIT:
             self.join()
@@ -120,8 +121,8 @@ class Robo(Thread):
         if not self.manual:
             msg = Message(cmd=Mover.FRENTE)
             self.connection.send(msg.serialize())
-            return True
-        return 
+            time.sleep(Automatico.SLEEP_TIME)
+        
 
     def tras(self):
         try:
@@ -133,8 +134,8 @@ class Robo(Thread):
         if not self.manual:
             msg = Message(cmd=Mover.TRAS)
             self.connection.send(msg.serialize())
-            return True
-        return 
+            time.sleep(Automatico.SLEEP_TIME)
+         
 
     def esquerda(self):
         try:
@@ -146,8 +147,8 @@ class Robo(Thread):
         if not self.manual:
             msg = Message(cmd=Mover.ESQUERDA)
             self.connection.send(msg.serialize())
-            return True
-        return
+            time.sleep(Automatico.SLEEP_TIME)
+        
 
     def direita(self):
         try:
@@ -159,8 +160,8 @@ class Robo(Thread):
         if not self.manual:
             msg = Message(cmd=Mover.DIREITA)
             self.connection.send(msg.serialize())
-            return True 
-        return 
+            time.sleep(Automatico.SLEEP_TIME)    
+         
 
     def _connect(self):
         """Conecta o robo ao controlador"""
@@ -220,25 +221,29 @@ class Automatico(Thread):
                 if (robot_x + 1, robot_y) not in self.robo.map:
                     print("indo para frente, yeehaaaw")
                     self.robo.frente()
+                else:
                     time.sleep(Automatico.SLEEP_TIME)
 
             elif robot_x > flag[0] and self.robo.current_pos != flag:
                 if (robot_x - 1, robot_y) not in self.robo.map:
                     print("indo para tras, Pi, Pi, Pi, 3.14, Pi")
                     self.robo.tras()
+                else:
                     time.sleep(Automatico.SLEEP_TIME)
 
             elif robot_y < flag[1] and self.robo.current_pos != flag:
                 if (robot_x, robot_y + 1) not in self.robo.map:
                     self.robo.direita()
-                    time.sleep(Automatico.SLEEP_TIME)
 
                     print("direita\n")
+                else:
+                    time.sleep(Automatico.SLEEP_TIME)
 
             elif robot_x > flag[1] and self.robo.current_pos != flag:
                 if (robot_x, robot_y - 1) not in self.robo.map:
                     print("esquerda\n")
                     self.robo.esquerda()
+                else:
                     time.sleep(Automatico.SLEEP_TIME)
 
             if old_coord == self.robo.current_pos: break # previnir entrar nuns loop doidao
@@ -256,7 +261,7 @@ class Automatico(Thread):
 
 
 if __name__ == "__main__":
-    print("versao 24.14.43")
+    print("versao 24.14.44")
     """PARAMETROS PARA TESTE EM LOCALHOST 
     localhost 0 0"""
     port = 42069
