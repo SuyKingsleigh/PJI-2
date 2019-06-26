@@ -58,7 +58,7 @@ class Jogo:
         atributo "manual": true se o jogo for manual, false se for automatico, vem por default true
     """
 
-    DIMENSAO = 6  # dimensao do mapa, no NxN
+    DIMENSAO = 4  # dimensao do mapa, no NxN
     NUMERO_DE_CACAS = 2  # numero de cacas no mapa
 
     # jogadores_dict: Dict[zmq.Socket, Jogador]
@@ -403,7 +403,7 @@ if __name__ == "__main__":
         debug = sys.argv[1]
     except:
         pass
-    def_flags = [(1,1), (2,2)]
+    def_flags = [[1,1], [2,2]]
     joguineo = InterfaceAuditora(Commands.PORT_SA)
     joguineo.run()
 

@@ -19,6 +19,8 @@ class Manual(Thread):
 		self.movedor = Mover(self._x, self._y)
 		self.movedor.start()
 
+		self.moveu = False
+
 		super(Manual, self).__init__()
 
 
@@ -63,7 +65,7 @@ class Manual(Thread):
 
 	def move(self, direcao):
 		global shared_obj
-
+		self.moveu = False
 		print("[MANUAL]: Movendo para %s" % str(direcao))
 		# Limpa evento mover coordenada
 		shared_obj.clear_event(SharedObj.MoverCoordenadaEvent)
@@ -95,6 +97,7 @@ class Manual(Thread):
 		self._avisa_posicao_atual()
 		if shared_obj.get(SharedObj.ManualMovimento) != Mover.EXIT:
 			shared_obj.set(SharedObj.ManualMovimento, Mover.PARADO)
+		self.moveu = True
 
 
 	def run(self):

@@ -37,7 +37,6 @@ class Robo(Thread):
         if msg.cmd == Mover.FRENTE:
             print("frente")
             try:
-                # self.motor.move(Mover.FRENTE)
                 self.frente()
             except Exception as e:
                 pass
@@ -45,7 +44,6 @@ class Robo(Thread):
         elif msg.cmd == Mover.TRAS:
             print("tras")
             try:
-                # self.motor.move(Mover.TRAS)
                 self.tras()
             except Exception as e:
                 pass
@@ -53,7 +51,6 @@ class Robo(Thread):
         elif msg.cmd == Mover.DIREITA:
             print("direita")
             try:
-                # self.motor.move(Mover.DIREITA)
                 self.direita()
             except Exception as e:
                 pass
@@ -61,7 +58,6 @@ class Robo(Thread):
         elif msg.cmd == Mover.ESQUERDA:
             print("esquerda")
             try:
-                # self.motor.move(Mover.ESQUERDA)
                 self.esquerda()
             except Exception as e:
                 pass
@@ -119,6 +115,7 @@ class Robo(Thread):
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         print(self.current_pos)
         if not self.manual:
+            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.FRENTE)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
@@ -132,6 +129,7 @@ class Robo(Thread):
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         print(self.current_pos)
         if not self.manual:
+            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.TRAS)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
@@ -145,6 +143,7 @@ class Robo(Thread):
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         print(self.current_pos)
         if not self.manual:
+            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.ESQUERDA)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
@@ -158,6 +157,7 @@ class Robo(Thread):
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         print(self.current_pos)
         if not self.manual:
+            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.DIREITA)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)    
