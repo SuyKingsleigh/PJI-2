@@ -135,6 +135,7 @@ class ComunicaComSA(Thread):
 
         elif msg.cmd == Commands.STOP:
             self.supervisor.stop()
+            self.try_move(self.supervisor.begin_pos)
             print("FIM DA PARTIDA ")
 
         else:
@@ -216,6 +217,7 @@ class Supervisor(Thread):
 
         self.mode = None
         self.run_flag = True
+        self.begin_pos = initial_pos
         self.current_pos = initial_pos
         self.robot_address = None
 
@@ -285,6 +287,7 @@ class Supervisor(Thread):
     def stop(self):
         msg = Message(cmd=Commands.STOP)
         self.router_socket.send_multipart([self.robot_address, msg.serialize()])
+        self.current_pos = int(self.begin_pos[0]), int(self.begin_pos[1])
 
     def move(self, coord):
         """Envia ao robo a ordem para se mover para coord"""

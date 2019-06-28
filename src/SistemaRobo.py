@@ -160,6 +160,7 @@ class Controlador:
         self.daemon = Thread()
         self.map = []
         self.current_pos = -1, -1
+        self.begin_pos = None,None
         self.manual = False
 
         self.ip_robo = ip_robo
@@ -296,6 +297,10 @@ class Controlador:
         elif msg.cmd == Commands.GET_FLAG:
             self.comunicador.get_flag(msg)
             print("Controlador recebeu um get flag ", msg.data, "\n")
+        
+        elif msg.cmd == Commands.SET_BEGIN_POS:
+            self.begin_pos = msg.data
+            print("begin pos is: ", msg.data)
 
         else:
             time.sleep(1.5)
@@ -325,6 +330,7 @@ if __name__ == "__main__":
         ip = sys.argv[2]  # ip do supervisor
         name = sys.argv[3]  # nome do robo
         ip_robo = sys.argv[4]  # ip do robo
+
 
         c = Comunicador(Commands.PORT_SA, ip, ip_robo)
         c.connect_to_supervisor(ip)

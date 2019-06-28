@@ -413,8 +413,11 @@ if __name__ == "__main__":
             debug = sys.argv[1]
             dimensao = int(sys.argv[2])
         except:
-            debug = sys.argv[1]
-            print("debug mode on")
+            try:
+                debug = sys.argv[1]
+                print("debug mode on")
+            except:
+                pass
 
     def_flags = [[1,1], [2,2]]
     joguineo = InterfaceAuditora(Commands.PORT_SA)

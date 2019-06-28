@@ -1,4 +1,4 @@
-# v28.18.22
+# v28.19.14
 import socket
 import sys
 import time
@@ -71,7 +71,13 @@ class Robo(Thread):
                     self.auto_thread.join(timeout=10)
                     self.auto_thread = None
             
-            print("STOP")
+            try:
+                self.motor = Manual(self.begin_pos)
+                print("motor connected")
+            except Exception as e:
+                print("[NOVO MANUAL] failled to connect motor: ", e)
+
+                print("STOP")
 
         elif msg == Commands.QUIT:
             try:
@@ -93,8 +99,6 @@ class Robo(Thread):
         elif msg.cmd == Commands.UPDATE_FLAGS:
             print("bandeiras: ", msg.data)
             self.flags = msg.data
-            # global global_flags
-            # global_flags = self.flags
 
         elif msg.cmd == Commands.MODE:
             # automatico = False
@@ -113,10 +117,6 @@ class Robo(Thread):
 
         elif msg.cmd == Commands.STATUS_GET_FLAG:
             self._blocked = False
-
-        else:
-            pass
-            # time.sleep(0.5)
 
     def frente(self):
         try:
@@ -180,8 +180,11 @@ class Robo(Thread):
         self.socket.bind((self.ip, self.port))
         self.socket.listen(1)
         self.connection, self.address = self.socket.accept()
+    
         print("conectado com, ", self.address)
 
+    def _send_begin_pos(self):
+        self.connection.send(Message(cmd=Commands.SET_BEGIN_POS, data=self.begin_pos).serialize())
     def _handle(self):
         while True:
             try:
