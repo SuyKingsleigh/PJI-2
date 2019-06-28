@@ -1,3 +1,4 @@
+# v28.18.22
 import socket
 import sys
 import time
@@ -62,18 +63,22 @@ class Robo(Thread):
             except Exception as e:
                 pass
 
-        elif msg == Commands.STOP:
-            print("STOP")
+        elif msg.cmd == Commands.STOP:
             self.current_pos = self.begin_pos
-            self.flags = []
+            self.flags = None
             if self.auto_thread:
                 if self.auto_thread.is_alive(): 
                     self.auto_thread.join(timeout=10)
                     self.auto_thread = None
+            
+            print("STOP")
 
         elif msg == Commands.QUIT:
-            self.join()
-            self.socket.close()
+            try:
+                self.join()
+                self.socket.close()
+            except:
+                pass
 
         elif not msg:
             time.sleep(1)
@@ -181,10 +186,11 @@ class Robo(Thread):
         while True:
             try:
                 msg = self.connection.recv(2048)
+                print(msg, file=sys.stderr)
                 msg = Message(None, msg)
                 self._process_data(msg)
             except Exception as e:
-                print(e)
+                print(e.with_traceback)
 
     def run(self):
         self._connect()
@@ -253,6 +259,7 @@ class Automatico(Thread):
                     time.sleep(Automatico.SLEEP_TIME)
 
             if old_coord == self.robo.current_pos: break # previnir entrar nuns loop doidao
+            if not self.robo.flags: break
             print("posicao atual do robo eh: ", self.robo.current_pos)
 
 
@@ -266,8 +273,8 @@ class Automatico(Thread):
             self._calcula_coord(flag)
 
 
+
 if __name__ == "__main__":
-    print("versao 24.14.44")
     """PARAMETROS PARA TESTE EM LOCALHOST 
     localhost 0 0"""
     port = 42069

@@ -126,6 +126,9 @@ class Comunica_SA:
             # nao tem dados
             print("PARA ESSA PORRA DE JOGO, BICHO")
             pass
+
+        elif msg.cmd == Commands.STATUS_GET_FLAG: 
+            # alguma coisa 
         else:
             pass
 

@@ -10,6 +10,7 @@ global user_input
 
 global def_flags 
 global debug 
+global dimensao
 
 ########################################################################################################################
 
@@ -58,14 +59,20 @@ class Jogo:
         atributo "manual": true se o jogo for manual, false se for automatico, vem por default true
     """
 
-    DIMENSAO = 4  # dimensao do mapa, no NxN
-    NUMERO_DE_CACAS = 2  # numero de cacas no mapa
+    DIMENSAO = 6  # dimensao do mapa, no NxN
+    NUMERO_DE_CACAS = 3  # numero de cacas no mapa
 
     # jogadores_dict: Dict[zmq.Socket, Jogador]
 
     def __init__(self):
         # Supondo que o mapa e numero de cacas sejam estaticos.
-        self.dimensao = Jogo.DIMENSAO
+        global dimensao
+        try:
+            self.dimensao = dimensao
+            print("a dimensao do mapa eh: ", self.dimensao)
+        except:
+            self.dimensao = Jogo.DIMENSAO
+
         self.numero_de_cacas = Jogo.NUMERO_DE_CACAS
         self.manual = -1
 
@@ -400,9 +407,15 @@ class InterfaceAuditora:
 ########################################################################################################################
 if __name__ == "__main__":
     try:
-        debug = sys.argv[1]
+        dimensao = int(sys.argv[1])
     except:
-        pass
+        try:
+            debug = sys.argv[1]
+            dimensao = int(sys.argv[2])
+        except:
+            debug = sys.argv[1]
+            print("debug mode on")
+
     def_flags = [[1,1], [2,2]]
     joguineo = InterfaceAuditora(Commands.PORT_SA)
     joguineo.run()
