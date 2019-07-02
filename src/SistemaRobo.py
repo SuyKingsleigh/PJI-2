@@ -82,13 +82,16 @@ class Comunicador(Thread):
             self.robo.send_stop()
             self.robo.running = False
             # self.robo.join(100)
+            self.try_move(self.robo.begin_pos)
             print("STOP")
+
 
         elif msg.cmd == Commands.INITIAL_POS:
 
             x, y = int(msg.data[0]), int(msg.data[1])
-            self.robo.current_pos = [x, y]
+            self.robo.current_pos = (x, y)
             print("current pos is ", self.robo.current_pos)
+            # self.dealer_socket.send_multipart(msg.serialize())
 
         elif msg.cmd == Commands.UPDATE_MAP:
             self.robo.map = msg.data
@@ -146,6 +149,7 @@ class Comunicador(Thread):
 
         self.robo.current_pos = coord
         self.robo.move(coord)
+
 
 
 ########################################################################################################################
@@ -247,7 +251,6 @@ class Controlador:
     def move(self, coord):
         if not coord in self.map:
             print("Robo andando para: ", coord)
-            time.sleep(random.randint(1, 10))
             print("chegou")
         else:
             print("posicao ja ocupada")
@@ -262,6 +265,7 @@ class Controlador:
 
     def send_stop(self):
         self._socket.send(Message(cmd=Commands.STOP).serialize())
+        self.current_pos = self.begin_pos
 
     def is_alive(self):
         return self.daemon.is_alive()

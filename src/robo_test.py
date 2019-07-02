@@ -1,4 +1,4 @@
-# v21.06
+# v1.20.00
 import socket
 import sys
 import time
@@ -7,6 +7,8 @@ from threading import Thread
 from Public import Message, Commands
 from manual import Manual
 from mover import Mover
+
+from Robo2 import Robo as robot
 
 
 class Robo(Thread):
@@ -28,13 +30,13 @@ class Robo(Thread):
         self.auto_thread = None
         # global flags
         try:
-            self.motor = Manual((self.current_pos[0], self.current_pos[1]))
+            self.robot = robot()
+            # self.motor = Manual((self.current_pos[0], self.current_pos[1]))
             print("motor connected")
         except Exception as e:
             print("failled to connect motor", e)
 
     def _process_data(self, msg):
-        # print(msg)
         if msg.cmd == Mover.FRENTE:
             print("frente")
             try:
@@ -72,7 +74,7 @@ class Robo(Thread):
                     self.auto_thread = None
             
             try:
-                self.motor = Manual(self.begin_pos)
+                self.robot = robot()
                 print("motor connected")
             except Exception as e:
                 print("[NOVO MANUAL] failled to connect motor: ", e)
@@ -120,13 +122,13 @@ class Robo(Thread):
 
     def frente(self):
         try:
-            self.motor.move(Mover.FRENTE)
+            # self.motor.move(Mover.FRENTE)
+            self.robot.frente()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.FRENTE)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
@@ -134,13 +136,13 @@ class Robo(Thread):
 
     def tras(self):
         try:
-            self.motor.move(Mover.TRAS)
+            # self.motor.move(Mover.TRAS)
+            self.robot.tras()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.TRAS)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
@@ -148,13 +150,13 @@ class Robo(Thread):
 
     def esquerda(self):
         try:
-            self.motor.move(Mover.ESQUERDA)
+            # self.motor.move(Mover.ESQUERDA)
+            self.robot.esquerda()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.ESQUERDA)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
@@ -162,13 +164,13 @@ class Robo(Thread):
 
     def direita(self):
         try:
-            self.motor.move(Mover.DIREITA)
+            # self.motor.move(Mover.DIREITA)
+            self.robot.direita()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.DIREITA)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)    

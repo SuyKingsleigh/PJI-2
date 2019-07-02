@@ -117,9 +117,19 @@ class Jogo:
             return True
         return False
 
+    def _str_to_int(self, t):
+        # gambiarra 
+        aux = []
+        try:
+            for x in t: aux.append(int(x))
+        except:
+            pass
+        return tuple(aux)
+
     def move_jogador(self, socket_jogador, coord):
         """Atualiza a posicao do jogador"""
-        coord = tuple(coord)
+        
+        coord = self._str_to_int(coord)
         if coord > (0, 0):
             if coord not in self._jogador_pos.values():
                 self._jogador_pos[socket_jogador] = coord
