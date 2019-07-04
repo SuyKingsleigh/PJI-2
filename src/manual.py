@@ -109,7 +109,7 @@ class Manual(Thread):
 				break
 
 			mov = shared_obj.get(SharedObj.ManualMovimento)
-			if mov != Mover.PARADO:
+			if mov != Mover.PARA1DO:
 				if mov == Mover.EXIT:
 					shared_obj.set(SharedObj.MoverMovimento, Mover.EXIT)
 					break

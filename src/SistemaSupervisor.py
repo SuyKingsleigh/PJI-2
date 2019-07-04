@@ -257,7 +257,7 @@ class Supervisor(Thread):
         elif msg.cmd == Commands.CONNECT_TO_SS:
             print("Robo Conectado")
             self.robot_address = address
-            msg = Message(cmd=Commands.INITIAL_POS, data=self.current_pos)
+            msg = Message(cmd=Commands.INITIAL_POS, data=self.begin_pos)
             self._send_reply(address, msg.serialize())
 
         else:
@@ -286,8 +286,9 @@ class Supervisor(Thread):
 
     def stop(self):
         msg = Message(cmd=Commands.STOP)
-        self.router_socket.send_multipart([self.robot_address, msg.serialize()])
-        self.current_pos = int(self.begin_pos[0]), int(self.begin_pos[1])
+        self.router_socket.send_multipart([self.robot_address, Message(cmd=Commands.STOP).serialize()])
+        self.current_pos = self.begin_pos
+        print("[STOPPED] begin pos is: ", self.begin_pos)
 
     def move(self, coord):
         """Envia ao robo a ordem para se mover para coord"""

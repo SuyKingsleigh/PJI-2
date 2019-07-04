@@ -382,7 +382,7 @@ class InterfaceAuditora:
     def run(self):
         """le a entrada padrao
         start = inicia partida
-        stop = termina partida, informa placar, resta placar e prepara-se para uma proxima
+        _stop = termina partida, informa placar, resta placar e prepara-se para uma proxima
         q = finaliza partida (feito pra testes)
         """
         global user_input

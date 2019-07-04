@@ -1,5 +1,7 @@
-from ev3dev.ev3 import *
 from time import sleep
+
+from ev3dev.ev3 import *
+
 
 class Robo:
     SPEED = 200
@@ -7,95 +9,94 @@ class Robo:
     MOTOR_RIGHT = 'outC'
 
     def __init__(self):
-        
-        self.modoDeJogo = 0  # mododeJogo igual a 0 para modo autonomo e 1 para modo manual
-        self.velocidade = Robo.SPEED
-        self.l = LargeMotor(Robo.MOTOR_LEFT)
-        self.r = LargeMotor(Robo.MOTOR_RIGHT)
-        self.cl = ColorSensor()
-        self.colors = ('unknown', 'black', 'blue', 'green', 'yellow', 'red', 'white', 'brown')
-        self.enviar = 0
+
+        self.speed = Robo.SPEED
+        self.left_motor = LargeMotor(Robo.MOTOR_LEFT)
+        self.right_motor = LargeMotor(Robo.MOTOR_RIGHT)
+        self.colour_sensor = ColorSensor()
+        self.colours = ('unknown', 'black', 'blue', 'green', 'yellow', 'red', 'white', 'brown')
 
     def frente(self):
-        self.cl.mode = 'COL-COLOR'
-        if self.colors[self.cl.value()] == "green" or self.colors[self.cl.value()] == "yellow" or self.colors[
-            self.cl.value()] == "blue":
-            while self.colors[self.cl.value()] == "green" or self.colors[self.cl.value()] == "yellow" or \
-                    self.colors[
-                        self.cl.value()] == "blue":
-                self.r.run_forever(speed_sp=self.velocidade)
-                self.l.run_forever(speed_sp=self.velocidade)
+        self.colour_sensor.mode = 'COL-COLOR'
+        if self.colours[self.colour_sensor.value()] == "green" or self.colours[
+            self.colour_sensor.value()] == "yellow" or self.colours[
+            self.colour_sensor.value()] == "blue":
+            while self.colours[self.colour_sensor.value()] == "green" or self.colours[
+                self.colour_sensor.value()] == "yellow" or \
+                    self.colours[
+                        self.colour_sensor.value()] == "blue":
+                self.right_motor.run_forever(speed_sp=self.speed)
+                self.left_motor.run_forever(speed_sp=self.speed)
             else:
-                self.stop()
-        if self.colors[self.cl.value()] == "unknown":
-            while self.colors[self.cl.value()] != "black":
-                self.r.run_forever(speed_sp=self.velocidade)
-        while self.colors[self.cl.value()] != "green":
-            while self.colors[self.cl.value()] == "black":
-                self.r.run_forever(speed_sp=self.velocidade / 2)
-                self.l.run_forever(speed_sp=self.velocidade)
-            while self.colors[self.cl.value()] == "white":
-                self.r.run_forever(speed_sp=self.velocidade)
-                self.l.run_forever(speed_sp=self.velocidade / 2)
-            if self.colors[self.cl.value()] == "yellow":
-                self.l.run_forever(speed_sp=self.velocidade)
-                self.r.run_forever(speed_sp=self.velocidade)
+                self._stop()
+
+        if self.colours[self.colour_sensor.value()] == "unknown":
+            while self.colours[self.colour_sensor.value()] != "black":
+                self.right_motor.run_forever(speed_sp=self.speed)
+        while self.colours[self.colour_sensor.value()] != "green":
+            while self.colours[self.colour_sensor.value()] == "black":
+                self.right_motor.run_forever(speed_sp=self.speed / 2)
+                self.left_motor.run_forever(speed_sp=self.speed)
+            while self.colours[self.colour_sensor.value()] == "white":
+                self.right_motor.run_forever(speed_sp=self.speed)
+                self.left_motor.run_forever(speed_sp=self.speed / 2)
+            if self.colours[self.colour_sensor.value()] == "yellow":
+                self.left_motor.run_forever(speed_sp=self.speed)
+                self.right_motor.run_forever(speed_sp=self.speed)
                 sleep(0.1)
                 break
-            if self.colors[self.cl.value()] == "blue":
-                self.l.run_forever(speed_sp=self.velocidade)
-                self.r.run_forever(speed_sp=self.velocidade)
+            if self.colours[self.colour_sensor.value()] == "blue":
+                self.left_motor.run_forever(speed_sp=self.speed)
+                self.right_motor.run_forever(speed_sp=self.speed)
                 sleep(0.1)
                 break
         else:
-            self.l.run_forever(speed_sp=self.velocidade)
-            self.r.run_forever(speed_sp=self.velocidade)
+            self.left_motor.run_forever(speed_sp=self.speed)
+            self.right_motor.run_forever(speed_sp=self.speed)
             sleep(0.1)
-        self.stop()
+        self._stop()
 
     def esquerda(self):
-        self.cl.mode = 'COL-COLOR'
-        while self.colors[self.cl.value()] == "green":
-            self.r.run_forever(speed_sp=self.velocidade)
-            self.l.run_forever(speed_sp=self.velocidade * 0)
+        self.colour_sensor.mode = 'COL-COLOR'
+        while self.colours[self.colour_sensor.value()] == "green":
+            self.right_motor.run_forever(speed_sp=self.speed)
+            self.left_motor.run_forever(speed_sp=self.speed * 0)
         else:
-            self.l.stop(stop_action="hold")
-        while self.colors[self.cl.value()] == "black":
-            self.r.run_forever(speed_sp=self.velocidade)
-        while self.colors[self.cl.value()] != "black":
-            self.r.run_forever(speed_sp=self.velocidade)
+            self.left_motor.stop(stop_action="hold")
+        while self.colours[self.colour_sensor.value()] == "black":
+            self.right_motor.run_forever(speed_sp=self.speed)
+        while self.colours[self.colour_sensor.value()] != "black":
+            self.right_motor.run_forever(speed_sp=self.speed)
         else:
-            self.r.run_forever(speed_sp=self.velocidade)
+            self.right_motor.run_forever(speed_sp=self.speed)
         self.frente()
 
     def direita(self):
-        self.cl.mode = 'COL-COLOR'
-        while self.colors[self.cl.value()] == "green":
-            self.l.run_forever(speed_sp=self.velocidade)
-            self.r.run_forever(speed_sp=self.velocidade/2)
+        self.colour_sensor.mode = 'COL-COLOR'
+        while self.colours[self.colour_sensor.value()] == "green":
+            self.left_motor.run_forever(speed_sp=self.speed * 0)
+            self.right_motor.run_forever(speed_sp=self.speed)
         else:
-            self.r.stop(stop_action="hold")
-        while self.colors[self.cl.value()] == "black":
-            self.l.run_forever(speed_sp=self.velocidade)
-        while self.colors[self.cl.value()] != "black":
-            self.l.run_forever(speed_sp=self.velocidade)
+            self.right_motor.stop(stop_action="hold")
+        while self.colours[self.colour_sensor.value()] == "black":
+            self.left_motor.run_forever(speed_sp=self.speed)
+        while self.colours[self.colour_sensor.value()] != "black":
+            self.left_motor.run_forever(speed_sp=self.speed)
         else:
-            self.l.run_forever(speed_sp=self.velocidade)
+            self.left_motor.run_forever(speed_sp=self.speed)
         self.frente()
 
     def tras(self):
-        self.cl.mode = 'COL-COLOR'
-        while self.colors[self.cl.value()] == "green":
-            self.l.run_forever(speed_sp=-self.velocidade)
-        while self.colors[self.cl.value()] == "black":
-            self.l.run_forever(speed_sp=-self.velocidade)
-        while self.colors[self.cl.value()] != "black":
-            self.l.run_forever(speed_sp=-self.velocidade)
-        self.stop()
+        self.colour_sensor.mode = 'COL-COLOR'
+        while self.colours[self.colour_sensor.value()] == "green":
+            self.left_motor.run_forever(speed_sp=-self.speed)
+        while self.colours[self.colour_sensor.value()] == "black":
+            self.left_motor.run_forever(speed_sp=-self.speed)
+        while self.colours[self.colour_sensor.value()] != "black":
+            self.left_motor.run_forever(speed_sp=-self.speed)
+        self._stop()
         self.frente()
 
-    def stop(self):
-        self.r.stop(stop_action="hold")
-        self.l.stop(stop_action="hold")
-
-  
+    def _stop(self):
+        self.right_motor.stop(stop_action="hold")
+        self.left_motor.stop(stop_action="hold")

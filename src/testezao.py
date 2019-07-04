@@ -138,7 +138,7 @@ class ComunicaComSA(Thread):
         elif msg.cmd == Commands.STOP:
             # self.started = False
             # self.thread_run_flag = False
-            self.supervisor.stop()
+            self.supervisor._stop()
             print("FIM DA PARTIDA ")
         else:
             pass

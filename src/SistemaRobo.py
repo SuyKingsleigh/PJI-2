@@ -81,15 +81,13 @@ class Comunicador(Thread):
             self.cacas = []
             self.robo.send_stop()
             self.robo.running = False
-            # self.robo.join(100)
-            self.try_move(self.robo.begin_pos)
             print("STOP")
 
 
         elif msg.cmd == Commands.INITIAL_POS:
 
             x, y = int(msg.data[0]), int(msg.data[1])
-            self.robo.current_pos = (x, y)
+            self.robo.begin_pos = (x, y)
             print("current pos is ", self.robo.current_pos)
             # self.dealer_socket.send_multipart(msg.serialize())
 
@@ -301,10 +299,6 @@ class Controlador:
         elif msg.cmd == Commands.GET_FLAG:
             self.comunicador.get_flag(msg)
             print("Controlador recebeu um get flag ", msg.data, "\n")
-        
-        elif msg.cmd == Commands.SET_BEGIN_POS:
-            self.begin_pos = msg.data
-            print("begin pos is: ", msg.data)
 
         else:
             time.sleep(1.5)

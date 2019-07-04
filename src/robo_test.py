@@ -1,4 +1,4 @@
-# v1.20.00
+# vL'enfantSauvage
 import socket
 import sys
 import time
@@ -7,9 +7,8 @@ from threading import Thread
 from Public import Message, Commands
 from manual import Manual
 from mover import Mover
-
 from Robo2 import Robo as robot
-
+global debug
 
 class Robo(Thread):
     """essa classe eh para ser executada no robo, a unica coisa que essa classe faz
@@ -29,14 +28,17 @@ class Robo(Thread):
         self._blocked = False
         self.auto_thread = None
         # global flags
-        try:
-            self.robot = robot()
-            # self.motor = Manual((self.current_pos[0], self.current_pos[1]))
-            print("motor connected")
-        except Exception as e:
-            print("failled to connect motor", e)
+        global debug 
+        if not debug:
+            try:
+                self.motor = robot()
+                print("motor connected")
+            except Exception as e:
+                print("failled to connect motor", e)
+        
 
     def _process_data(self, msg):
+        # print(msg)
         if msg.cmd == Mover.FRENTE:
             print("frente")
             try:
@@ -73,13 +75,14 @@ class Robo(Thread):
                     self.auto_thread.join(timeout=10)
                     self.auto_thread = None
             
-            try:
-                self.robot = robot()
-                print("motor connected")
-            except Exception as e:
-                print("[NOVO MANUAL] failled to connect motor: ", e)
+            if not debug:
+                try:
+                    self.motor = robot()
+                    print("motor connected")
+                except Exception as e:
+                    print("[NOVO MANUAL] failled to connect motor: ", e)
 
-                print("STOP")
+            print("STOP")
 
         elif msg == Commands.QUIT:
             try:
@@ -94,9 +97,6 @@ class Robo(Thread):
         elif msg.cmd == Commands.UPDATE_MAP:
             print("mapa: ", msg.data)
             self.map = msg.data
-            # global global_map
-            # global_map = self.map
-
 
         elif msg.cmd == Commands.UPDATE_FLAGS:
             print("bandeiras: ", msg.data)
@@ -122,8 +122,7 @@ class Robo(Thread):
 
     def frente(self):
         try:
-            # self.motor.move(Mover.FRENTE)
-            self.robot.frente()
+            self.motor.frente()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
@@ -136,8 +135,7 @@ class Robo(Thread):
 
     def tras(self):
         try:
-            # self.motor.move(Mover.TRAS)
-            self.robot.tras()
+            self.motor.tras()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
@@ -150,8 +148,7 @@ class Robo(Thread):
 
     def esquerda(self):
         try:
-            # self.motor.move(Mover.ESQUERDA)
-            self.robot.esquerda()
+            self.motor.esquerda()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
@@ -164,8 +161,7 @@ class Robo(Thread):
 
     def direita(self):
         try:
-            # self.motor.move(Mover.DIREITA)
-            self.robot.direita()
+            self.motor.direita()
         except Exception as e:
             pass
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
@@ -181,12 +177,14 @@ class Robo(Thread):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind((self.ip, self.port))
         self.socket.listen(1)
+        print("ready to conect")
         self.connection, self.address = self.socket.accept()
     
         print("conectado com, ", self.address)
 
     def _send_begin_pos(self):
         self.connection.send(Message(cmd=Commands.SET_BEGIN_POS, data=self.begin_pos).serialize())
+    
     def _handle(self):
         while True:
             try:
@@ -207,6 +205,15 @@ class Robo(Thread):
     def get_flag(self, coord):
         self.connection.send(Message(cmd=Commands.GET_FLAG, data=coord).serialize())
         self._blocked = True
+
+    def close_socket(self):
+        try:
+            self.connection.close()
+        except Exception as e:
+            print(e)
+        finally:
+            self.socket.close()
+            print("main socket has been closed")
 
 
 class Automatico(Thread):
@@ -273,6 +280,7 @@ class Automatico(Thread):
 
     def run(self):
         while not self.robo.flags: pass
+        self.robo.flags.sort()
         for flag in self.robo.flags:
             print("indo atras da bandeira", flag)
             self._calcula_coord(flag)
@@ -283,5 +291,17 @@ if __name__ == "__main__":
     """PARAMETROS PARA TESTE EM LOCALHOST 
     localhost 0 0"""
     port = 42069
+
+    global debug 
+    debug = False
+    
+    for arg in sys.argv:
+        if arg == "debug": debug = True
+
+    if debug: print("debug mode")
     coord = int(sys.argv[1]), int(sys.argv[2])
-    Robo("0.0.0.0", port, coord).run()
+    try:
+        robo = Robo("0.0.0.0", port, coord) 
+        robo.run()
+    except KeyboardInterrupt:
+        robo.close_socket()

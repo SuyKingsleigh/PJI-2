@@ -89,7 +89,7 @@ class Mover(Thread):
 		global shared_obj
 		if shared_obj.get(SharedObj.MoverMovimento) == Mover.PAUSA:
 			shared_obj.append_list(SharedObj.MoverHistorico, Mover.PAUSA)
-			# self.stop()
+			# self._stop()
 			while True:
 				sleep(0.5)
 

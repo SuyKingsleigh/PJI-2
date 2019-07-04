@@ -31,7 +31,7 @@ class InterfaceSR(Thread):
 
 	def _get_mac(self):
 		mac = ""
-		with open('/sys/class/net/wlan0/address', 'r') as f:
+		with open('/sys/class/net/wlan0/address', 'right_motor') as f:
 			mac = f.readline().rstrip()
 		f.close()
 		return mac
