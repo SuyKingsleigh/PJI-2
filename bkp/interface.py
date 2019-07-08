@@ -1,13 +1,14 @@
-from manual import *
+import json
+from threading import Thread
+
 from automatico import *
+from manual import *
 from mover import *
+from receptor import *
 # from mover_test import *
 from shared import *
-from receptor import *
 from transmissor import *
-from time import sleep
-from threading import Thread
-import json
+
 
 class ModoDeJogo(object):
 	MANUAL = 1
@@ -31,7 +32,7 @@ class InterfaceSR(Thread):
 
 	def _get_mac(self):
 		mac = ""
-		with open('/sys/class/net/wlan0/address', 'r') as f:
+        with open('/sys/class/net/wlan0/address', 'right_motor') as f:
 			mac = f.readline().rstrip()
 		f.close()
 		return mac

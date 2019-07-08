@@ -1,9 +1,10 @@
 # line_follower.py
 # by: Carl Strömberg
 
+from time import sleep
+
 # Import the EV3-robot library
 import ev3dev.ev3 as ev3
-from time import sleep
 
 
 class LineFollower:
@@ -82,7 +83,7 @@ class LineFollower:
 
             previous_error = aerror
 
-            # Check if buttons pressed (for pause or stop)
+            # Check if buttons pressed (for pause or _stop)
             if not self.btn.down:  # Stop
                 print("Exit program... ")
                 self.shut_down = True

@@ -1,7 +1,7 @@
-from ev3dev.ev3 import *
+from threading import Thread
 from time import time, sleep
-from threading import Thread, Lock
-from copy import deepcopy
+
+from ev3dev.ev3 import *
 from shared import *
 
 
@@ -49,7 +49,7 @@ class Mover(Thread):
 		# Configura modo dos sensores
 		self.sensor_luminosidade.mode = 'COL-REFLECT'
 		self.sensor_us.mode = 'US-DIST-CM'
-		# assert cl.connected, "Connect a color sensor to any sensor port"
+        # assert colour_sensor.connected, "Connect a color sensor to any sensor port"
 
 		# Atributos ocultos
 		self._ultima_direcao = Mover.FRENTE
@@ -178,7 +178,7 @@ class Mover(Thread):
 			print("EM PAUSA !! Aguardando algo ...")
 			self.stop()
 			shared_obj.append_list(SharedObj.MoverHistorico, Mover.PAUSA)
-			# self.stop()
+            # self._stop()
 			while True:
 				sleep(0.5)
 

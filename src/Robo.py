@@ -1,4 +1,3 @@
-# v2.9.1
 import socket
 import sys
 import time
@@ -9,6 +8,7 @@ from manual import Manual
 from mover import Mover
 
 global debug
+
 
 class Robo(Thread):
     """essa classe eh para ser executada no robo, a unica coisa que essa classe faz
@@ -28,14 +28,13 @@ class Robo(Thread):
         self._blocked = False
         self.auto_thread = None
         # global flags
-        global debug 
+        global debug
         if not debug:
             try:
                 self.motor = Manual((self.current_pos[0], self.current_pos[1]))
                 print("motor connected")
             except Exception as e:
                 print("failled to connect motor", e)
-        
 
     def _process_data(self, msg):
         # print(msg)
@@ -71,10 +70,10 @@ class Robo(Thread):
             self.current_pos = self.begin_pos
             self.flags = None
             if self.auto_thread:
-                if self.auto_thread.is_alive(): 
+                if self.auto_thread.is_alive():
                     self.auto_thread.join(timeout=10)
                     self.auto_thread = None
-            
+
             if not debug:
                 try:
                     self.motor = Manual(self.begin_pos)
@@ -113,7 +112,7 @@ class Robo(Thread):
             else:
                 print("Modo manual\n")
                 if self.auto_thread:
-                    if self.auto_thread.is_alive(): 
+                    if self.auto_thread.is_alive():
                         self.auto_thread.join(timeout=10)
                         self.auto_thread = None
 
@@ -132,7 +131,6 @@ class Robo(Thread):
             msg = Message(cmd=Mover.FRENTE)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
-        
 
     def tras(self):
         try:
@@ -146,7 +144,6 @@ class Robo(Thread):
             msg = Message(cmd=Mover.TRAS)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
-         
 
     def esquerda(self):
         try:
@@ -160,7 +157,6 @@ class Robo(Thread):
             msg = Message(cmd=Mover.ESQUERDA)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
-        
 
     def direita(self):
         try:
@@ -173,8 +169,7 @@ class Robo(Thread):
             while not self.motor.moveu: pass
             msg = Message(cmd=Mover.DIREITA)
             self.connection.send(msg.serialize())
-            time.sleep(Automatico.SLEEP_TIME)    
-         
+            time.sleep(Automatico.SLEEP_TIME)
 
     def _connect(self):
         """Conecta o robo ao controlador"""
@@ -183,13 +178,13 @@ class Robo(Thread):
         self.socket.listen(1)
         print("ready to conect")
         self.connection, self.address = self.socket.accept()
-    
+
         print("conectado com, ", self.address)
 
     def _send_begin_pos(self):
         self.connection.send(Message(cmd=Commands.SET_BEGIN_POS, data=self.begin_pos).serialize())
-    
-    def _handle(self): 
+
+    def _handle(self):
         while True:
             try:
                 msg = self.connection.recv(2048)
@@ -222,6 +217,7 @@ class Robo(Thread):
 
 class Automatico(Thread):
     SLEEP_TIME = 1.5
+
     def __init__(self, robo):
         super().__init__()
         self.current_pos = robo.begin_pos
@@ -239,7 +235,7 @@ class Automatico(Thread):
         # quando desbloqueia vem pra esse
         while not self.robo.current_pos == flag:
             # robot_x, robot_y = int(self.robo.current_pos[0]), int(self.robo.current_pos[
-            #1])
+            # 1])
             robot_x, robot_y = self.robo.current_pos[0], self.robo.current_pos[1]
             old_coord = robot_x, robot_y
             # se a bandeira estiver na frente (X) do robo
@@ -274,13 +270,12 @@ class Automatico(Thread):
                 else:
                     time.sleep(Automatico.SLEEP_TIME)
 
-            if old_coord == self.robo.current_pos: break # previnir entrar nuns loop doidao
+            if old_coord == self.robo.current_pos: break  # previnir entrar nuns loop doidao
             if not self.robo.flags: break
             print("posicao atual do robo eh: ", self.robo.current_pos)
 
-
         print("achou a bandeira")
-        if(self.robo.current_pos == flag): self.robo.get_flag(self.robo.current_pos)
+        if (self.robo.current_pos == flag): self.robo.get_flag(self.robo.current_pos)
 
     def run(self):
         while not self.robo.flags: pass
@@ -290,22 +285,21 @@ class Automatico(Thread):
             self._calcula_coord(flag)
 
 
-
 if __name__ == "__main__":
     """PARAMETROS PARA TESTE EM LOCALHOST 
     localhost 0 0"""
     port = 42069
 
-    global debug 
+    global debug
     debug = False
-    
+
     for arg in sys.argv:
         if arg == "debug": debug = True
 
     if debug: print("debug mode")
     coord = int(sys.argv[1]), int(sys.argv[2])
     try:
-        robo = Robo("0.0.0.0", port, coord) 
+        robo = Robo("0.0.0.0", port, coord)
         robo.run()
     except KeyboardInterrupt:
         robo.close_socket()

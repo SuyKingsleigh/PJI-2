@@ -1,8 +1,7 @@
-# v26.19.45
-from ev3dev.ev3 import *
+from threading import Thread
 from time import time, sleep
-from threading import Thread, Lock
-from copy import deepcopy
+
+from ev3dev.ev3 import *
 from shared import *
 
 
@@ -225,7 +224,7 @@ class Mover(Thread):
 				(direcao == Mover.DIREITA and self._ultima_direcao == Mover.ESQUERDA) or \
 				(direcao == Mover.ESQUERDA and self._ultima_direcao == Mover.DIREITA):
 				self._go_back()
-			elif not (self._coord_x == 6 and self._coord_y == 6): 
+			elif not (self._coord_x == 6 and self._coord_y == 6):
 				self._go_front()
 			faixa_esq = self._gira(direcao)
 			self._encontra_faixa(faixa_esq)

@@ -1,7 +1,8 @@
-from time import time, sleep
-from threading import Thread, Lock
-from copy import deepcopy
+from threading import Thread
+from time import sleep
+
 from shared import *
+
 
 class Cor(object):
 	# 0=unknown, 1=black, 2=blue, 3=green, 4=yellow, 5=red, 6=white, 7=brown
@@ -89,7 +90,7 @@ class Mover(Thread):
 		global shared_obj
 		if shared_obj.get(SharedObj.MoverMovimento) == Mover.PAUSA:
 			shared_obj.append_list(SharedObj.MoverHistorico, Mover.PAUSA)
-			# self.stop()
+            # self._stop()
 			while True:
 				sleep(0.5)
 

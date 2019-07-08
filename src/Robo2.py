@@ -1,3 +1,4 @@
+# v.iFood
 from time import sleep
 
 from ev3dev.ev3 import *
@@ -74,8 +75,8 @@ class Robo:
     def direita(self):
         self.colour_sensor.mode = 'COL-COLOR'
         while self.colours[self.colour_sensor.value()] == "green":
-            self.left_motor.run_forever(speed_sp=self.speed * 0)
-            self.right_motor.run_forever(speed_sp=self.speed)
+            self.left_motor.run_forever(speed_sp=self.speed)
+            self.right_motor.run_forever(speed_sp=self.speed / 2)
         else:
             self.right_motor.stop(stop_action="hold")
         while self.colours[self.colour_sensor.value()] == "black":
