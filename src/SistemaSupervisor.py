@@ -6,8 +6,7 @@ import sys
 from threading import *
 
 import zmq
-from Public import Message, Commands
-from Move import Mover
+from Public import Message, Commands, Mover
 
 
 class ComunicaComSA(Thread):

@@ -4,9 +4,8 @@ import sys
 from threading import Thread
 
 import zmq
-from Public import Message, Commands
+from Public import Message, Commands, Mover
 from SistemaSupervisor import Supervisor
-from Move import Mover
 
 HOST = 'localhost'
 

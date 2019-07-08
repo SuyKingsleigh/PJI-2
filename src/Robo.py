@@ -3,9 +3,8 @@ import sys
 import time
 from threading import Thread
 
-from Public import Message, Commands
+from Public import Message, Commands, Mover
 from Move import Robo as robot
-from Move import Mover
 
 global debug
 global orientation

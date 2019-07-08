@@ -101,3 +101,15 @@ class Commands:
     MANUAL = True
     AUTOMATICO = False
     DIRECTION = "dir"
+
+class Mover:
+	"""docstring for Mover"""
+	EXIT = -1
+	PARADO = 0
+	FRENTE = 1
+	DIREITA = 2
+	TRAS = 3
+	ESQUERDA = 4
+
+	PAUSA = 10
+	CONTINUA = 11
