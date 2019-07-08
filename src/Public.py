@@ -91,7 +91,8 @@ class Commands:
     PORT_SS = 9999
     CONNECT_TO_SS = "sup"
     GET_ROBOT_POS = "robot_pos"
-    SET_BEGIN_POS = "sbp" 
+    SET_BEGIN_POS = "sbp"
+    CONNECTED = "c"
 
     ID = "id"
     IP = "ip"

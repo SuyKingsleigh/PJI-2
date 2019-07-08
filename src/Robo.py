@@ -4,15 +4,22 @@ import time
 from threading import Thread
 
 from Public import Message, Commands
-from manual import Manual
-from mover import Mover
+from Move import Robo as robot
+from Move import Mover
 
 global debug
+global orientation
 
+version = "Red Hot"
 
 class Robo(Thread):
     """essa classe eh para ser executada no robo, a unica coisa que essa classe faz
     eh mover o robo, e eventualmente ativar o modo automatico"""
+
+    FRONT = "w"
+    BACK = "s"
+    RIGHT = "d"
+    LEFT = "a"
 
     def __init__(self, ip, port, coord_inicial):
         super().__init__()
@@ -27,11 +34,17 @@ class Robo(Thread):
         self.flags = []
         self._blocked = False
         self.auto_thread = None
+
         # global flags
+        global orientation
+        self._last_dir = orientation
+        self._begin_orientation = orientation
+
+        print("orientation is: ", self._last_dir)
         global debug
         if not debug:
             try:
-                self.motor = Manual((self.current_pos[0], self.current_pos[1]))
+                self.motor = robot()
                 print("motor connected")
             except Exception as e:
                 print("failled to connect motor", e)
@@ -68,6 +81,7 @@ class Robo(Thread):
 
         elif msg.cmd == Commands.STOP:
             self.current_pos = self.begin_pos
+            self._last_dir = self._begin_orientation
             self.flags = None
             if self.auto_thread:
                 if self.auto_thread.is_alive():
@@ -76,12 +90,12 @@ class Robo(Thread):
 
             if not debug:
                 try:
-                    self.motor = Manual(self.begin_pos)
+                    self.motor = robot()
                     print("motor connected")
                 except Exception as e:
                     print("[NOVO MANUAL] failled to connect motor: ", e)
 
-                    print("STOP")
+            print("STOP")
 
         elif msg == Commands.QUIT:
             try:
@@ -120,56 +134,87 @@ class Robo(Thread):
             self._blocked = False
 
     def frente(self):
-        try:
-            self.motor.move(Mover.FRENTE)
-        except Exception as e:
-            pass
+        self._mover(dir=Robo.FRONT)
         self.current_pos = int(self.current_pos[0]) + 1, int(self.current_pos[1])
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.FRENTE)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
 
     def tras(self):
-        try:
-            self.motor.move(Mover.TRAS)
-        except Exception as e:
-            pass
+        self._mover(dir=Robo.BACK)
         self.current_pos = int(self.current_pos[0]) - 1, int(self.current_pos[1])
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.TRAS)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
 
     def esquerda(self):
-        try:
-            self.motor.move(Mover.ESQUERDA)
-        except Exception as e:
-            pass
+        self._mover(dir=Robo.LEFT)
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) - 1
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.ESQUERDA)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
 
     def direita(self):
-        try:
-            self.motor.move(Mover.DIREITA)
-        except Exception as e:
-            pass
+        self._mover(dir=Robo.RIGHT)
         self.current_pos = int(self.current_pos[0]), int(self.current_pos[1]) + 1
         print(self.current_pos)
         if not self.manual:
-            while not self.motor.moveu: pass
             msg = Message(cmd=Mover.DIREITA)
             self.connection.send(msg.serialize())
             time.sleep(Automatico.SLEEP_TIME)
+
+    def _mover(self, dir):
+        if debug:
+            self._last_dir = dir
+            return
+
+        if self._last_dir == Robo.FRONT:
+            if dir == Robo.FRONT:
+                self.motor.frente()
+            elif dir == Robo.RIGHT:
+                self.motor.direita()
+            elif dir == Robo.LEFT:
+                self.motor.esquerda()
+            elif dir == Robo.BACK:
+                self.motor.tras()
+
+        elif self._last_dir == Robo.RIGHT:
+            if dir == Robo.FRONT:
+                self.motor.esquerda()
+            elif dir == Robo.LEFT:
+                self.motor.tras()
+            elif dir == Robo.RIGHT:
+                self.motor.frente()
+            elif dir == Robo.BACK:
+                self.motor.direita()
+
+        elif self._last_dir == Robo.LEFT:
+            if dir == Robo.FRONT:
+                self.motor.direita()
+            elif dir == Robo.LEFT:
+                self.motor.frente()
+            elif dir == Robo.RIGHT:
+                self.motor.tras()
+            elif dir == Robo.BACK:
+                self.motor.esquerda()
+
+        elif self._last_dir == Robo.BACK:
+            if dir == Robo.FRONT:
+                self.motor.tras()
+            elif dir == Robo.LEFT:
+                self.motor.direita()
+            elif dir == Robo.RIGHT:
+                self.motor.esquerda()
+            elif dir == Robo.BACK:
+                self.motor.frente()
+
+        self._last_dir = dir
 
     def _connect(self):
         """Conecta o robo ao controlador"""
@@ -214,6 +259,8 @@ class Robo(Thread):
             self.socket.close()
             print("main socket has been closed")
 
+
+#########################################################################################################################################
 
 class Automatico(Thread):
     SLEEP_TIME = 1.5
@@ -289,12 +336,18 @@ if __name__ == "__main__":
     """PARAMETROS PARA TESTE EM LOCALHOST 
     localhost 0 0"""
     port = 42069
-
+    print("Version: ", version)
     global debug
+    global orientation
     debug = False
+    orientation = Robo.FRONT
 
+    i = 0
     for arg in sys.argv:
         if arg == "debug": debug = True
+        if arg == "-o" or arg == "-O":
+            orientation = sys.argv[i + 1]
+        i += 1
 
     if debug: print("debug mode")
     coord = int(sys.argv[1]), int(sys.argv[2])

@@ -1,8 +1,19 @@
-# v.iFood
+# v.8.14.17
 from time import sleep
 
 from ev3dev.ev3 import *
 
+class Mover:
+	"""docstring for Mover"""
+	EXIT = -1
+	PARADO = 0
+	FRENTE = 1
+	DIREITA = 2
+	TRAS = 3
+	ESQUERDA = 4
+
+	PAUSA = 10
+	CONTINUA = 11
 
 class Robo:
     SPEED = 200

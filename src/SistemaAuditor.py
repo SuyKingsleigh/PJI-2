@@ -76,7 +76,13 @@ class Jogo:
         self.numero_de_cacas = Jogo.NUMERO_DE_CACAS
         self.manual = -1
 
-        self.lista_de_cacas = []  # lista das cacas
+        global debug
+        try:
+            if debug:
+                self.lista_de_cacas = def_flags  # lista das cacas
+        except:
+            pass
+    
         self._jogador_pos = dict()  # dicionario da posicao de cada jogador {socket : (coordX, coordY) }
         self.jogadores_dict = dict()
 
@@ -429,7 +435,6 @@ if __name__ == "__main__":
             except:
                 pass
 
-    def_flags = [[1,1], [2,2]]
+    def_flags = [(1,1), (2,2)]
     joguineo = InterfaceAuditora(Commands.PORT_SA)
     joguineo.run()
-

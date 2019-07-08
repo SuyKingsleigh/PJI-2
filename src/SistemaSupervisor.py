@@ -1,3 +1,4 @@
+
 import os
 import signal
 import socket
@@ -6,7 +7,7 @@ from threading import *
 
 import zmq
 from Public import Message, Commands
-from mover import Mover
+from Move import Mover
 
 
 class ComunicaComSA(Thread):

@@ -6,7 +6,7 @@ from threading import Thread
 import zmq
 from Public import Message, Commands
 from SistemaSupervisor import Supervisor
-from mover import Mover
+from Move import Mover
 
 HOST = 'localhost'
 
@@ -20,13 +20,14 @@ class Comunicador(Thread):
     """
     SLEEP_TIME = 3
 
-    def __init__(self, port, SA_ip, ip_robo):
+    def __init__(self, port, SA_ip, ip_robo, begin_pos):
         super().__init__()
         self.port = port
         self.context = zmq.Context()
 
         self.SA_ip = SA_ip
 
+        self.begin_pos = begin_pos
         self.cacas = []
         self.robo = Controlador(self, ip_robo)
 
@@ -85,9 +86,8 @@ class Comunicador(Thread):
 
 
         elif msg.cmd == Commands.INITIAL_POS:
-
-            x, y = int(msg.data[0]), int(msg.data[1])
-            self.robo.begin_pos = (x, y)
+            # x, y = int(msg.data[0]), int(msg.data[1])
+            # self.robo.begin_pos = (x, y)
             print("current pos is ", self.robo.current_pos)
             # self.dealer_socket.send_multipart(msg.serialize())
 
@@ -161,8 +161,8 @@ class Controlador:
         self.running = False
         self.daemon = Thread()
         self.map = []
-        self.current_pos = -1, -1
-        self.begin_pos = None,None
+        self.current_pos = self.comunicador.begin_pos
+        self.begin_pos = self.comunicador.begin_pos
         self.manual = False
 
         self.ip_robo = ip_robo
@@ -263,7 +263,7 @@ class Controlador:
 
     def send_stop(self):
         self._socket.send(Message(cmd=Commands.STOP).serialize())
-        self.current_pos = self.begin_pos
+        self.current_pos = self.comunicador.begin_pos
 
     def is_alive(self):
         return self.daemon.is_alive()
@@ -337,7 +337,8 @@ if __name__ == "__main__":
         ip = sys.argv[1]  # ip do auditor
         name = sys.argv[2]  # nome do robo
         ip_robo = sys.argv[3]  # ip do robo
+        coord = int(sys.argv[4]), int(sys.argv[5])
 
-        c = Comunicador(Commands.PORT_SA, ip, ip_robo)
+        c = Comunicador(Commands.PORT_SA, ip, ip_robo, coord)
         c.connect(name)
         c.start()
